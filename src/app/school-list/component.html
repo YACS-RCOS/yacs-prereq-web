@@ -1,0 +1,12 @@
+BEGIN SCHOOLS ELEMENT
+<ul>
+  <li *ngFor="let school of schools">
+    <h5>School of {{school.name}}</h5>
+    <ul class="dept-list">
+      <li *ngFor="let department of school.departments">
+        <department [dept]="department"></department>
+      </li>
+    </ul>
+  </li>
+</ul>
+END SCHOOLS ELEMENT

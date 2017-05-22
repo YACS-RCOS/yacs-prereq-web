@@ -1,0 +1,101 @@
+{
+	course_dependency:
+	[
+		{
+			course_uid: CSCI-1010,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-1100,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-1190,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-1200,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-2200,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-2300,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-2500,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-2600,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4020,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4050,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4100,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4110,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4120,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4150,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4210,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+		{
+			course_uid: CSCI-4210,
+			dependent_course_uid: a,
+			enforced_dependent: true,
+			dependent_type: pre/co
+		},
+	]
+}
