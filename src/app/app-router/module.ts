@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 
 const routes: Routes = [
+
   // { path: '', redirectTo: '/schools', pathMatch: 'full' },
 ];
 
