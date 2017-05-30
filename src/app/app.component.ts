@@ -9,7 +9,4 @@ import { ConstantsService } from './services/constants';
     ConstantsService
   ]
 })
-export class AppComponent {
-  // inject ConstantsService
-  // constructor(private constants: ConstantsService) {}
-}
+export class AppComponent { }
