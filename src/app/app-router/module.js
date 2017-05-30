@@ -8,15 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 exports.__esModule = true;
 var core_1 = require("@angular/core");
 var router_1 = require("@angular/router");
-var component_1 = require("../school-list/component");
-var component_2 = require("../course-list/component");
-var component_3 = require("../schedule-view/component");
-var routes = [
-    { path: '', redirectTo: '/schools', pathMatch: 'full' },
-    { path: 'schools', component: component_1.SchoolListComponent },
-    { path: 'courses', component: component_2.CourseListComponent },
-    { path: 'schedules', component: component_3.ScheduleViewComponent },
-];
+var routes = [];
 var AppRouterModule = (function () {
     function AppRouterModule() {
     }
