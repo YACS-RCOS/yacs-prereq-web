@@ -2,9 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
-    "target": "es6",
+    "target": "es5",
     "module": "es6",
-    "lib": ["ES2017","ES6", "DOM","ScriptHost"],
+    "lib": ["ES6", "DOM","ScriptHost"],
     "experimentalDecorators": true,
     "module": "commonjs",
     "target": "es5",
