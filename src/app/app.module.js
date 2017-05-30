@@ -14,9 +14,6 @@ var module_1 = require("./app-router/module");
 var app_component_1 = require("./app.component");
 var component_1 = require("./header/component");
 var component_2 = require("./footer/component");
-var module_2 = require("./school-list/module");
-var module_3 = require("./course-list/module");
-var module_4 = require("./schedule-view/module");
 var constants_1 = require("./services/constants");
 var AppModule = (function () {
     function AppModule() {
@@ -30,9 +27,6 @@ AppModule = __decorate([
             forms_1.FormsModule,
             http_1.HttpModule,
             module_1.AppRouterModule,
-            module_2.SchoolListModule,
-            module_3.CourseListModule,
-            module_4.ScheduleViewModule
         ],
         declarations: [
             app_component_1.AppComponent,
