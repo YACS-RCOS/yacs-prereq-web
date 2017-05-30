@@ -13,6 +13,6 @@
     "lib": ["ES2017","ES6", "DOM","ScriptHost"]
   },
   "include": [
-    "src/**/*"
+    "src/*"
   ]
 }

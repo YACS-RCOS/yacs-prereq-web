@@ -1,4 +1,3 @@
-
 FROM node:latest
 
 ENV APP_DIR /usr/src/app/
