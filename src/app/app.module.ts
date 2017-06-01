@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/component';
 import { FooterComponent } from './footer/component';
 import { ConstantsService } from './services/constants';
+import { GraphComponent } from './shared/graph/graph.component';
 
 @NgModule({
   imports: [
@@ -19,7 +20,8 @@ import { ConstantsService } from './services/constants';
   declarations: [
     AppComponent,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    GraphComponent
   ],
   providers: [
     ConstantsService
