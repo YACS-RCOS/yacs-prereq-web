@@ -7,10 +7,6 @@ WORKDIR $APP_DIR
 
 RUN npm install -g @angular/cli --silent --depth 1
 
-RUN npm uninstall -g npm 
-ADD https://www.npmjs.com/install.sh ./install.sh
-RUN sh install.sh
-
 COPY package.json $APP_DIR
 COPY .angular-cli.json karma.conf.js protractor.conf.js tsconfig.json tslint.json $APP_DIR
 RUN npm install --silent --depth 0
