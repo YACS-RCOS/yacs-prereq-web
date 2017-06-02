@@ -10,18 +10,16 @@ import * as d3 from 'd3';
 export class GraphComponent implements OnInit {
 
   @Input() private data: Array<any>;
-  @ViewChild('chart') private chartContainer: ElementRef;
+  @ViewChild('graph') private graphContainer: ElementRef;
   private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
   private graph: any;
-  private width: number;
-  private height: number;
-  private xScale: any;
-  private yScale: any;
+  private nodeRadius: number;
+  private userCanEdit: boolean;
   private colors: any;
-  private xAxis: any;
-  private yAxis: any;
 
-  constructor() { }
+  constructor() { 
+
+  }
 
   ngOnInit() {
   this.createGraph();
@@ -37,48 +35,30 @@ export class GraphComponent implements OnInit {
   }
 	
   createGraph() {
-    let element = this.chartContainer.nativeElement;
-    this.width = element.offsetWidth - this.margin.left - this.margin.right;
-    this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
+    let element = this.graphContainer.nativeElement;
     let svg = d3.select(element).append('svg')
       .attr('width', element.offsetWidth)
       .attr('height', element.offsetHeight);
 
-    // chart plot area
+    // make SVG container
     this.graph = svg.append('g')
-      .attr('class', 'bars')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+    .attr("width", 1024)
+    .attr("height", 768);
 
-    // define X & Y domains
-    let xDomain = this.data.map(d => d[0]);
-    let yDomain = [0, d3.max(this.data, d => d[1])];
 
-    // create scales
-    this.xScale = d3.scaleBand().padding(0.1).domain(xDomain).rangeRound([0, this.width]);
-    this.yScale = d3.scaleLinear().domain(yDomain).range([this.height, 0]);
+	//Draw a circle to verify that we are executing correctly
+	var circle = this.graph.append("circle")
+                         .attr("cx", 30)
+                         .attr("cy", 30)
+                         .attr("r", 20);
 
-    // bar colors
-    this.colors = d3.scaleLinear().domain([0, this.data.length]).range(<any[]>['red', 'blue']);
-
-    // x & y axis
-    this.xAxis = svg.append('g')
-      .attr('class', 'axis axis-x')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top + this.height})`)
-      .call(d3.axisBottom(this.xScale));
-    this.yAxis = svg.append('g')
-      .attr('class', 'axis axis-y')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
-      .call(d3.axisLeft(this.yScale));
+    // init constants
+    this.nodeRadius = 40;
+    this.userCanEdit = false;
   }
 
   updateGraph() {
-    // update scales & axis
-    this.xScale.domain(this.data.map(d => d[0]));
-    this.yScale.domain([0, d3.max(this.data, d => d[1])]);
-    this.colors.domain([0, this.data.length]);
-    this.xAxis.transition().call(d3.axisBottom(this.xScale));
-    this.yAxis.transition().call(d3.axisLeft(this.yScale));
-
+    /*
     let update = this.graph.selectAll('.bar')
       .data(this.data);
 
@@ -87,10 +67,10 @@ export class GraphComponent implements OnInit {
 
     // update existing bars
     this.graph.selectAll('.bar').transition()
-      .attr('x', d => this.xScale(d[0]))
-      .attr('y', d => this.yScale(d[1]))
-      .attr('width', d => this.xScale.bandwidth())
-      .attr('height', d => this.height - this.yScale(d[1]))
+      .attr('x', d => 20
+      .attr('y', d => 30
+      .attr('width', d => this.nodeRadius
+      .attr('height', d => this.nodeRadius
       .style('fill', (d, i) => this.colors(i));
 
     // add new bars
@@ -98,14 +78,15 @@ export class GraphComponent implements OnInit {
       .enter()
       .append('rect')
       .attr('class', 'bar')
-      .attr('x', d => this.xScale(d[0]))
-      .attr('y', d => this.yScale(0))
-      .attr('width', this.xScale.bandwidth())
+      .attr('x', d => 20
+      .attr('y', d => 30
+      .attr('width', this.nodeRadius
       .attr('height', 0)
       .style('fill', (d, i) => this.colors(i))
       .transition()
       .delay((d, i) => i * 10)
-      .attr('y', d => this.yScale(d[1]))
-      .attr('height', d => this.height - this.yScale(d[1]));
+      .attr('y', d => 30);
+      .attr('height', d => this.nodeRadius);
+  	*/
   }
 }
