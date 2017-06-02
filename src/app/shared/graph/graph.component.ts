@@ -16,6 +16,7 @@ export class GraphComponent implements OnInit {
   private nodeRadius: number;
   private userCanEdit: boolean;
   private colors: any;
+  private strokeWidth : number;
 
   constructor() { 
 
@@ -35,26 +36,36 @@ export class GraphComponent implements OnInit {
   }
 	
   createGraph() {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
     let element = this.graphContainer.nativeElement;
-    let svg = d3.select(element).append('svg')
-      .attr('width', element.offsetWidth)
-      .attr('height', element.offsetHeight);
-
-    // make SVG container
-    this.graph = svg.append('g')
-    .attr("width", 1024)
-    .attr("height", 768);
-
-
-	//Draw a circle to verify that we are executing correctly
-	var circle = this.graph.append("circle")
-                         .attr("cx", 30)
-                         .attr("cy", 30)
-                         .attr("r", 20);
+    this.graph = d3.select(element).append('svg')
+      .attr('width', width)
+      .attr('height', height);
 
     // init constants
     this.nodeRadius = 40;
     this.userCanEdit = false;
+    this.strokeWidth = 3;
+
+    //Draw a circle to verify that we are executing correctly
+    console.log(width);
+    console.log(height);
+
+  var circle = this.graph.append("svg")
+  .attr("x",width/2)
+  .attr("y",height/2)
+  .attr("width",this.nodeRadius*2+this.strokeWidth*2)
+  .attr("height",this.nodeRadius*2+this.strokeWidth*2);
+
+  var circleGraphic = circle.append("circle")
+                         .attr("cx", this.nodeRadius+this.strokeWidth)
+                         .attr("cy", this.nodeRadius+this.strokeWidth)
+                         .attr("r", this.nodeRadius)
+                         .attr("stroke","black")
+                         .attr("stroke-width",this.strokeWidth)
+                         .attr("fill","red");
   }
 
   updateGraph() {
