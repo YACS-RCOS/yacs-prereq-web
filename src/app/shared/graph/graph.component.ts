@@ -71,9 +71,13 @@ export class GraphComponent implements OnInit {
 		edges.push({startNode:"1100",endNode:"1200"})
 		var nodeDict = {};
 
+		//construct edge and node group parents
+		var edgeParent = this.graph.append("g").attr("id","edges");
+		var nodeParent = this.graph.append("g").attr("id","nodes");
+
 		//construct graph nodes
 		for (let name of nodeNames) {
-			var circle = this.graph.append("svg")
+			var circle = nodeParent.append("svg")
 				.attr("x", curX)
 				.attr("y", curY)
 				.attr("width", this.nodeRadius * 2 + this.strokeWidth * 2)
@@ -113,7 +117,7 @@ export class GraphComponent implements OnInit {
 			var edgeWidth = Math.abs(startNodeX - endNodeX);
 			var edgeHeight = Math.abs(startNodeY - endNodeY);
 			
-			var newEdge = this.graph.append("svg")
+			var newEdge = edgeParent.append("svg")
 			.attr("x",startNodeX)
 			.attr("y",startNodeY)
 			.attr("width", edgeWidth + this.edgeWidth)
