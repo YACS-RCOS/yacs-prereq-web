@@ -66,6 +66,13 @@ export class GraphComponent implements OnInit {
                          .attr("stroke","black")
                          .attr("stroke-width",this.strokeWidth)
                          .attr("fill","red");
+var circleText = circle.append("text") 
+.attr("x",this.nodeRadius+this.strokeWidth)
+.attr("y",this.nodeRadius+this.strokeWidth)
+.attr("font-size","20px")
+.attr("text-anchor", "middle")
+.attr("alignment-baseline", "central")
+.text("1100")
   }
 
   updateGraph() {
