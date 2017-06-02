@@ -9,8 +9,12 @@
     "baseUrl": "",
     "types": [
       "jasmine",
+<<<<<<< HEAD
       "node",
       "d3"
+=======
+      "node"
+>>>>>>> upstream/master
     ],
     "outDir": "../out-tsc/app",
     "baseUrl": "",
