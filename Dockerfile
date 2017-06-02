@@ -8,8 +8,8 @@ WORKDIR $APP_DIR
 RUN npm install -g @angular/cli --silent --depth 1
 
 COPY package.json $APP_DIR
-COPY .angular-cli.json karma.conf.js protractor.conf.js tsconfig.json tslint.json $APP_DIR
-RUN npm install --silent --depth 0
+COPY .angular-cli.json karma.conf.js protractor.conf.js tsconfig.json tslint.json prereq_data.json $APP_DIR
+RUN npm install -g --silent --depth 0
 
 COPY ./src $APP_DIR
 RUN npm build --prod
