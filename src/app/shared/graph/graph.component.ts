@@ -27,7 +27,6 @@ export class GraphComponent implements OnInit {
 	private strokeWidth: number;
 	private edgeWidth: number;
 	private nodeSpacing: number;
-	private mouseDown : boolean = false;
 
 	constructor() {
 
@@ -70,7 +69,11 @@ export class GraphComponent implements OnInit {
 		var nodeNames: string[] = ["1100", "1200"]
 		let edges : edge[] = []
 		edges.push({startNode:"1100",endNode:"1200"})
+		
+		//dictionary of 'name' : 'svg parent' for easy node access
 		var nodeDict = {};
+		//dictionary of 'startNodeName' : 'svg parent' and 'endNodeName' : 'svg parent' for easy edge access
+		var edgeDict = {};
 
 		//construct edge and node group parents
 		var edgeParent = this.graph.append("g").attr("id","edges");
@@ -94,6 +97,7 @@ export class GraphComponent implements OnInit {
 			    .on("mousemove", function(){
 			        if(this.isDown) {
 			            var coords = d3.mouse(this);
+			            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
 			            d3.select(this).attr("x", +d3.select(this).attr("x") + (coords[0] - this.startCoords[0]));
 			        	d3.select(this).attr("y", +d3.select(this).attr("y") + (coords[1] - this.startCoords[1]));
 			        }
@@ -128,6 +132,7 @@ export class GraphComponent implements OnInit {
 			var startNode = nodeDict[edge.startNode];
 			var endNode = nodeDict[edge.endNode];
 
+			//TODO: this feels like the wrong way to access node attributes; there must be a simpler way
 			var startNodeX = startNode._groups[0][0]["x"]["baseVal"]["value"] + startNode._groups[0][0]["width"]["baseVal"]["value"] /2;
 			var startNodeY = startNode._groups[0][0]["y"]["baseVal"]["value"] + startNode._groups[0][0]["height"]["baseVal"]["value"] /2;
 			var endNodeX = endNode._groups[0][0]["x"]["baseVal"]["value"] + startNode._groups[0][0]["width"]["baseVal"]["value"] /2;
@@ -149,7 +154,9 @@ export class GraphComponent implements OnInit {
 			.attr("y2",edgeHeight - this.edgeWidth/2)
 			.attr("stroke-width",this.edgeWidth)
 			.attr("stroke", "black")
-			console.log(startNode);
+
+			edgeDict[edge.startNode] = newEdge;
+			edgeDict[edge.endNode] = newEdge;
 		}
 	}
 
