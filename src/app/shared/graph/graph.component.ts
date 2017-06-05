@@ -27,6 +27,13 @@ export class GraphComponent implements OnInit {
 	private strokeThickness: number;
 	private edgeThickness: number;
 	private nodeSpacing: number;
+	private nodeDict: any;
+	private edgeDict: any;
+
+	//mouse drag vars
+	private startCoords: [number,number];
+	private dragging: boolean = false;
+	private dragNode: any;
 
 	constructor() {
 
@@ -57,7 +64,7 @@ export class GraphComponent implements OnInit {
 		// init constants
 		this.nodeRadius = 40;
 		this.userCanEdit = false;
-		this.strokeThickness = 3;
+		this.strokeThickness = 2;
 		this.edgeThickness = 4;
 		this.nodeSpacing = 24;
 
@@ -71,16 +78,67 @@ export class GraphComponent implements OnInit {
 		edges.push({startNode:"1100",endNode:"1200"})
 		
 		//dictionary of 'name' : 'svg parent' for easy node access
-		var nodeDict = {};
+		this.nodeDict = {};
 		//dictionary of 'startNodeName' : 'svg parent' and 'endNodeName' : 'svg parent' for easy edge access
-		var edgeDict = {};
+		this.edgeDict = {};
+
+		//maintain a reference to this in case we need to access it while inside a selection
+		var baseThis = this;
 
 		//construct edge and node group parents
 		var edgeParent = this.graph.append("g").attr("id","edges");
 		var nodeParent = this.graph.append("g").attr("id","nodes");
 
+		//setup mouse events on graph
+		this.graph.on("mousedown", function() {
+			//poll for closest node on mouseDown
+			baseThis.startCoords = d3.mouse(this);
+			var closestNode = null;
+			var closestDistance = -1;
+			for (var nodeKey in baseThis.nodeDict) {
+				var curCircle = baseThis.nodeDict[nodeKey];
+				var curDistance = Math.sqrt(
+					Math.pow(+curCircle.attr("x") + +curCircle.attr("width") / 2 - baseThis.startCoords[0], 2) +
+					Math.pow(+curCircle.attr("y") + +curCircle.attr("height") / 2 - baseThis.startCoords[1], 2));
+				if (closestDistance == -1 || curDistance < closestDistance) {
+					closestDistance = curDistance;
+					closestNode = baseThis.nodeDict[nodeKey];
+				}
+			}
+
+			//check if closest node is within drag start distance
+			if (closestDistance <= baseThis.nodeRadius) {
+				baseThis.dragging = true;
+				baseThis.dragNode = closestNode;
+			}
+			
+		})
+		.on("mousemove", function() {
+			//check for node dragging
+			if (baseThis.dragging) {
+				var coords = d3.mouse(this);
+	            var dx = (coords[0] - baseThis.startCoords[0]);
+	            var dy = (coords[1] - baseThis.startCoords[1]);
+	            console.log(dx)
+	            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
+	            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
+	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
+
+	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
+	        	var connectedEdge = baseThis.edgeDict[baseThis.dragNode.attr("id")];
+	        	if (connectedEdge) {
+	        		baseThis.recalculateEdge(connectedEdge);
+	        	}
+	        	baseThis.startCoords[0] += dx;
+	        	baseThis.startCoords[1] += dy;
+			}
+		})
+
+		.on("mouseup", function() {
+			baseThis.dragging = false;
+		});
+
 		//construct graph nodes
-		var globalEdgeThickness = this.edgeThickness;
 		for (let name of nodeNames) {
 			var circle = nodeParent.append("svg")
 				.attr("x", curX)
@@ -88,102 +146,7 @@ export class GraphComponent implements OnInit {
 				.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
 				.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 				.attr("isDown",true)
-				.attr("id",name)
-
-				//dragging
-				.on("mousedown", function(){
-			        this.isDown = true; 
-			        this.startCoords = d3.mouse(this);	
-
-			    })
-			    .on("mousemove", function(){
-			        if(this.isDown) {
-			            var coords = d3.mouse(this);
-			            var dx = (coords[0] - this.startCoords[0]);
-			            var dy = (coords[1] - this.startCoords[1]);
-			            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
-			            d3.select(this).attr("x", +d3.select(this).attr("x") + dx);
-			        	d3.select(this).attr("y", +d3.select(this).attr("y") + dy);
-
-			        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-			        	var connectedEdge = edgeDict[d3.select(this).attr("id")];
-			        	if (connectedEdge) {
-			        		var edgeLine = connectedEdge.select("line");
-
-			        		var startNode = nodeDict[connectedEdge.attr("startNodeID")];
-			        		var endNode = nodeDict[connectedEdge.attr("endNodeID")];
-
-			        		var startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
-							var startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
-							var endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
-							var endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
-
-			        		var minX = Math.min(startNodeX,endNodeX);
-			        		var maxX = Math.max(startNodeX,endNodeX);
-			        		var minY = Math.min(startNodeY,endNodeY);
-			        		var maxY = Math.max(startNodeY,endNodeY);
-
-			        		var edgeWidth = maxX - minX;
-							var edgeHeight = maxY - minY;
-
-							connectedEdge.attr("width", edgeWidth + globalEdgeThickness);
-							connectedEdge.attr("height", edgeHeight + globalEdgeThickness);
-
-							connectedEdge.attr("x", minX - globalEdgeThickness/2);
-							connectedEdge.attr("y", minY - globalEdgeThickness/2);
-
-							if (minX == startNodeX) {
-								edgeLine.attr("x1", globalEdgeThickness / 2);
-								edgeLine.attr("x2", edgeWidth + globalEdgeThickness / 2)
-							}
-							else {
-								edgeLine.attr("x1",edgeWidth + globalEdgeThickness / 2)
-								edgeLine.attr("x2", globalEdgeThickness / 2);
-							}
-							if (minY == startNodeY) {
-								edgeLine.attr("y1", globalEdgeThickness / 2);
-								edgeLine.attr("y2",edgeHeight + globalEdgeThickness / 2)
-							}
-							else {
-								edgeLine.attr("y1",edgeHeight + globalEdgeThickness / 2)
-								edgeLine.attr("y2", globalEdgeThickness / 2);
-							}
-							
-			        		//start node
-			        		/*if (connectedEdge.attr("startNodeID") == d3.select(this).attr("id")) {
-			        			connectedEdge.attr("x", +connectedEdge.attr("x") + dx);
-			    				connectedEdge.attr("y", +connectedEdge.attr("y") + dy);
-		    					edgeLine.attr("x2", +edgeLine.attr("x2") - dx);
-		    					edgeLine.attr("y2", +edgeLine.attr("y2") - dy);
-
-		    					if (+edgeLine.attr("x2") < 2) {
-		    						edgeLine.attr("x1", +edgeLine.attr("x1") + (2 - +edgeLine.attr("x2")));
-		    						edgeLine.attr("x2",2);
-		    					}
-		    					if (+edgeLine.attr("y2") < 2) {
-		    						edgeLine.attr("y1", +edgeLine.attr("y1") + (2 - +edgeLine.attr("y2")));
-		    						edgeLine.attr("y2",2);
-		    					}
-
-			    				var edgeThickness = Math.abs(+edgeLine.attr("x2") - +edgeLine.attr("x1"));
-								var edgeHeight = Math.abs(+edgeLine.attr("y2") - +edgeLine.attr("y1"));
-								connectedEdge.attr("width", edgeThickness + globalEdgeThickness);
-								connectedEdge.attr("height", edgeHeight + globalEdgeThickness);
-								console.log(edgeLine.attr("x2"))
-								console.log(edgeLine.attr("y2"))
-			        		}
-			        		//end node
-			        		else {
-			        			connectedEdge.attr("x2", +connectedEdge.attr("x2") + dx);
-			    				connectedEdge.attr("y2", +connectedEdge.attr("y2") + dy);
-
-			        		}*/
-			        	}
-			        }
-			     })
-			    .on("mouseup", function(){
-			        this.isDown = false;
-			    });     
+				.attr("id",name)  
 
 			var circleGraphic = circle.append("circle")
 				.attr("cx", this.nodeRadius + this.strokeThickness)
@@ -191,7 +154,7 @@ export class GraphComponent implements OnInit {
 				.attr("r", this.nodeRadius)
 				.attr("stroke", "black")
 				.attr("stroke-width", this.strokeThickness)
-				.attr("fill", "red");
+				.attr("fill", "rgb(200,200,255)");
 
 			var circleText = circle.append("text")
 				.attr("x", this.nodeRadius + this.strokeThickness)
@@ -199,18 +162,17 @@ export class GraphComponent implements OnInit {
 				.attr("font-size", "20px")
 				.attr("text-anchor", "middle")
 				.attr("alignment-baseline", "central")
-				.attr("unselectable", "on")
 				.text(name);
 
-			nodeDict[name] = circle;
+			this.nodeDict[name] = circle;
 			curY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
 			curX += 50;
 		}
 
 		//construct graph edges
 		for (let edge of edges) {
-			var startNode = nodeDict[edge.startNode];
-			var endNode = nodeDict[edge.endNode];
+			var startNode = this.nodeDict[edge.startNode];
+			var endNode = this.nodeDict[edge.endNode];
 
 			var startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
 			var startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
@@ -221,23 +183,61 @@ export class GraphComponent implements OnInit {
 			var edgeHeight = Math.abs(startNodeY - endNodeY);
 			
 			var newEdge = edgeParent.append("svg")
-			.attr("x",startNodeX)
-			.attr("y",startNodeY)
-			.attr("width", edgeWidth + this.edgeThickness)
-			.attr("height", edgeHeight + this.edgeThickness)
 			.attr("startNodeID", startNode.attr("id"))
-			.attr("endNodeID", endNode.attr("id"))
+			.attr("endNodeID", endNode.attr("id"));
 
 			var edgeGraphic = newEdge.append("line")
-			.attr("x1",this.edgeThickness/2)
-			.attr("y1",this.edgeThickness/2)
-			.attr("x2",edgeWidth - this.edgeThickness/2)
-			.attr("y2",edgeHeight - this.edgeThickness/2)
 			.attr("stroke-width",this.edgeThickness)
-			.attr("stroke", "black")
+			.attr("stroke", "black");
 
-			edgeDict[edge.startNode] = newEdge;
-			edgeDict[edge.endNode] = newEdge;
+			this.edgeDict[edge.startNode] = newEdge;
+			this.edgeDict[edge.endNode] = newEdge;
+
+			this.recalculateEdge(newEdge);
+		}
+	}
+
+	/*recalculate position, dimensions, and line position of connectedEdge*/
+	recalculateEdge (connectedEdge : any) {
+		var edgeLine = connectedEdge.select("line");
+
+		var startNode = this.nodeDict[connectedEdge.attr("startNodeID")];
+		var endNode = this.nodeDict[connectedEdge.attr("endNodeID")];
+
+		var startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
+		var startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
+		var endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
+		var endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
+
+		var minX = Math.min(startNodeX,endNodeX);
+		var maxX = Math.max(startNodeX,endNodeX);
+		var minY = Math.min(startNodeY,endNodeY);
+		var maxY = Math.max(startNodeY,endNodeY);
+
+		var edgeWidth = maxX - minX;
+		var edgeHeight = maxY - minY;
+
+		connectedEdge.attr("width", edgeWidth + this.edgeThickness);
+		connectedEdge.attr("height", edgeHeight + this.edgeThickness);
+
+		connectedEdge.attr("x", minX - this.edgeThickness/2);
+		connectedEdge.attr("y", minY - this.edgeThickness/2);
+
+		if (minX == startNodeX) {
+			edgeLine.attr("x1", this.edgeThickness / 2);
+			edgeLine.attr("x2", edgeWidth + this.edgeThickness / 2)
+		}
+		else {
+			edgeLine.attr("x1",edgeWidth + this.edgeThickness / 2)
+			edgeLine.attr("x2", this.edgeThickness / 2);
+		}
+		if (minY == startNodeY) {
+			edgeLine.attr("y1", this.edgeThickness / 2);
+			edgeLine.attr("y2",edgeHeight + this.edgeThickness / 2)
+		}
+		else {
+			edgeLine.attr("y1",edgeHeight + this.edgeThickness/ 2)
+			edgeLine.attr("y2", this.edgeThickness / 2);
 		}
 	}
 
