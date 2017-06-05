@@ -30,6 +30,11 @@ export class GraphComponent implements OnInit {
 	private nodeDict: any;
 	private edgeDict: any;
 
+	//mouse drag vars
+	private startCoords: [number,number];
+	private dragging: boolean = false;
+	private dragNode: any;
+
 	constructor() {
 
 	}
@@ -59,7 +64,7 @@ export class GraphComponent implements OnInit {
 		// init constants
 		this.nodeRadius = 40;
 		this.userCanEdit = false;
-		this.strokeThickness = 3;
+		this.strokeThickness = 2;
 		this.edgeThickness = 4;
 		this.nodeSpacing = 24;
 
@@ -84,6 +89,55 @@ export class GraphComponent implements OnInit {
 		var edgeParent = this.graph.append("g").attr("id","edges");
 		var nodeParent = this.graph.append("g").attr("id","nodes");
 
+		//setup mouse events on graph
+		this.graph.on("mousedown", function() {
+			//poll for closest node on mouseDown
+			baseThis.startCoords = d3.mouse(this);
+			var closestNode = null;
+			var closestDistance = -1;
+			for (var nodeKey in baseThis.nodeDict) {
+				var curCircle = baseThis.nodeDict[nodeKey];
+				var curDistance = Math.sqrt(
+					Math.pow(+curCircle.attr("x") + +curCircle.attr("width") / 2 - baseThis.startCoords[0], 2) +
+					Math.pow(+curCircle.attr("y") + +curCircle.attr("height") / 2 - baseThis.startCoords[1], 2));
+				if (closestDistance == -1 || curDistance < closestDistance) {
+					closestDistance = curDistance;
+					closestNode = baseThis.nodeDict[nodeKey];
+				}
+			}
+
+			//check if closest node is within drag start distance
+			if (closestDistance <= baseThis.nodeRadius) {
+				baseThis.dragging = true;
+				baseThis.dragNode = closestNode;
+			}
+			
+		})
+		.on("mousemove", function() {
+			//check for node dragging
+			if (baseThis.dragging) {
+				var coords = d3.mouse(this);
+	            var dx = (coords[0] - baseThis.startCoords[0]);
+	            var dy = (coords[1] - baseThis.startCoords[1]);
+	            console.log(dx)
+	            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
+	            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
+	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
+
+	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
+	        	var connectedEdge = baseThis.edgeDict[baseThis.dragNode.attr("id")];
+	        	if (connectedEdge) {
+	        		baseThis.recalculateEdge(connectedEdge);
+	        	}
+	        	baseThis.startCoords[0] += dx;
+	        	baseThis.startCoords[1] += dy;
+			}
+		})
+
+		.on("mouseup", function() {
+			baseThis.dragging = false;
+		});
+
 		//construct graph nodes
 		for (let name of nodeNames) {
 			var circle = nodeParent.append("svg")
@@ -92,34 +146,7 @@ export class GraphComponent implements OnInit {
 				.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
 				.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 				.attr("isDown",true)
-				.attr("id",name)
-
-				.on("mousedown", function(){
-			        this.isDown = true; 
-			        this.startCoords = d3.mouse(this);	
-
-			    })
-
-			    //check for dragging
-			    .on("mousemove", function(){
-			        if(this.isDown) {
-			            var coords = d3.mouse(this);
-			            var dx = (coords[0] - this.startCoords[0]);
-			            var dy = (coords[1] - this.startCoords[1]);
-			            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
-			            d3.select(this).attr("x", +d3.select(this).attr("x") + dx);
-			        	d3.select(this).attr("y", +d3.select(this).attr("y") + dy);
-
-			        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-			        	var connectedEdge = baseThis.edgeDict[d3.select(this).attr("id")];
-			        	if (connectedEdge) {
-			        		baseThis.recalculateEdge(connectedEdge);
-			        	}
-			        }
-			     })
-			    .on("mouseup", function(){
-			        this.isDown = false;
-			    });     
+				.attr("id",name)  
 
 			var circleGraphic = circle.append("circle")
 				.attr("cx", this.nodeRadius + this.strokeThickness)
@@ -127,7 +154,7 @@ export class GraphComponent implements OnInit {
 				.attr("r", this.nodeRadius)
 				.attr("stroke", "black")
 				.attr("stroke-width", this.strokeThickness)
-				.attr("fill", "red");
+				.attr("fill", "rgb(200,200,255)");
 
 			var circleText = circle.append("text")
 				.attr("x", this.nodeRadius + this.strokeThickness)
@@ -135,7 +162,6 @@ export class GraphComponent implements OnInit {
 				.attr("font-size", "20px")
 				.attr("text-anchor", "middle")
 				.attr("alignment-baseline", "central")
-				//.attr("unselectable", "on")
 				.text(name);
 
 			this.nodeDict[name] = circle;
