@@ -27,6 +27,7 @@ export class GraphComponent implements OnInit {
 	private strokeWidth: number;
 	private edgeWidth: number;
 	private nodeSpacing: number;
+	private mouseDown : boolean = false;
 
 	constructor() {
 
@@ -81,7 +82,25 @@ export class GraphComponent implements OnInit {
 				.attr("x", curX)
 				.attr("y", curY)
 				.attr("width", this.nodeRadius * 2 + this.strokeWidth * 2)
-				.attr("height", this.nodeRadius * 2 + this.strokeWidth * 2);
+				.attr("height", this.nodeRadius * 2 + this.strokeWidth * 2)
+				.attr("isDown",true)
+
+				//dragging
+				.on("mousedown", function(){
+			        this.isDown = true; 
+			        this.startCoords = d3.mouse(this);	
+
+			    })
+			    .on("mousemove", function(){
+			        if(this.isDown) {
+			            var coords = d3.mouse(this);
+			            d3.select(this).attr("x", +d3.select(this).attr("x") + (coords[0] - this.startCoords[0]));
+			        	d3.select(this).attr("y", +d3.select(this).attr("y") + (coords[1] - this.startCoords[1]));
+			        }
+			     })
+			    .on("mouseup", function(){
+			        this.isDown = false;
+			    });     
 
 			var circleGraphic = circle.append("circle")
 				.attr("cx", this.nodeRadius + this.strokeWidth)
@@ -109,10 +128,10 @@ export class GraphComponent implements OnInit {
 			var startNode = nodeDict[edge.startNode];
 			var endNode = nodeDict[edge.endNode];
 
-			var startNodeX = startNode._groups[0][0]["x"]["animVal"]["value"] + startNode._groups[0][0]["width"]["animVal"]["value"] /2;
-			var startNodeY = startNode._groups[0][0]["y"]["animVal"]["value"] + startNode._groups[0][0]["height"]["animVal"]["value"] /2;
-			var endNodeX = endNode._groups[0][0]["x"]["animVal"]["value"] + startNode._groups[0][0]["width"]["animVal"]["value"] /2;
-			var endNodeY = endNode._groups[0][0]["y"]["animVal"]["value"] + startNode._groups[0][0]["height"]["animVal"]["value"] /2;
+			var startNodeX = startNode._groups[0][0]["x"]["baseVal"]["value"] + startNode._groups[0][0]["width"]["baseVal"]["value"] /2;
+			var startNodeY = startNode._groups[0][0]["y"]["baseVal"]["value"] + startNode._groups[0][0]["height"]["baseVal"]["value"] /2;
+			var endNodeX = endNode._groups[0][0]["x"]["baseVal"]["value"] + startNode._groups[0][0]["width"]["baseVal"]["value"] /2;
+			var endNodeY = endNode._groups[0][0]["y"]["baseVal"]["value"] + startNode._groups[0][0]["height"]["baseVal"]["value"] /2;
 
 			var edgeWidth = Math.abs(startNodeX - endNodeX);
 			var edgeHeight = Math.abs(startNodeY - endNodeY);
@@ -126,8 +145,8 @@ export class GraphComponent implements OnInit {
 			var edgeGraphic = newEdge.append("line")
 			.attr("x1",this.edgeWidth/2)
 			.attr("y1",this.edgeWidth/2)
-			.attr("x2",edgeWidth + this.edgeWidth/2)
-			.attr("y2",edgeHeight + this.edgeWidth/2)
+			.attr("x2",edgeWidth - this.edgeWidth/2)
+			.attr("y2",edgeHeight - this.edgeWidth/2)
 			.attr("stroke-width",this.edgeWidth)
 			.attr("stroke", "black")
 			console.log(startNode);
