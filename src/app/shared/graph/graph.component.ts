@@ -64,8 +64,8 @@ export class GraphComponent implements OnInit {
 		this.graph = d3.select(element).append('svg')
 			.attr("width","100%")
 			.attr("height","600")
-			//.attr('width', width)
-			//.attr('height', height);
+			/*.attr('width', width)
+			.attr('height', height);*/
 
 		// init constants
 		this.nodeRadius = 30;
@@ -81,8 +81,8 @@ export class GraphComponent implements OnInit {
 		//hard-code nodes and edges until we reimplement loading prereqs from JSON
 		type edge = {startNode: string, endNode: string}
 		
-		/*let nodeNames: string[] = ["CSCI 1100", "CSCI 1200", "CSCI 2100"]*/
-		let edges : edge[] = [({startNode:"CSCI 1100",endNode:"CSCI 1200"}),({startNode:"CSCI 1200",endNode:"CSCI 2100"})]
+		/*let nodeNames: string[] = ["CSCI 1100", "CSCI 1200", "CSCI 2100"]
+		let edges : edge[] = [({startNode:"CSCI 1100",endNode:"CSCI 1200"}),({startNode:"CSCI 1200",endNode:"CSCI 2100"})]*/
 
 		let nodeData;
 		let metaNodeData;
@@ -131,7 +131,6 @@ export class GraphComponent implements OnInit {
 					let coords = d3.mouse(this);
 		            let dx = (coords[0] - baseThis.startCoords[0]);
 		            let dy = (coords[1] - baseThis.startCoords[1]);
-		            console.log(dx)
 		            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
 		            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
 		        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
@@ -191,46 +190,48 @@ export class GraphComponent implements OnInit {
 					curX += (baseThis.nodeRadius + baseThis.strokeThickness) * 2 + baseThis.nodeSpacing;
 					curY = baseThis.nodeSpacing;
 				}
+
+
+				//construct edges based off of this node's prereqs
+				for (let edge of node.prereq_formula) {
+					let startNode = circle;
+					let endNode = baseThis.nodeDict[edge];
+
+					if (! (startNode && endNode)) {
+						continue;
+					}
+
+					let startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
+					let startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
+					let endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
+					let endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
+					
+					let edgeWidth = Math.abs(startNodeX - endNodeX);
+					let edgeHeight = Math.abs(startNodeY - endNodeY);
+					
+					//edge parent
+					let newEdge = edgeParent.append("svg")
+					.attr("startNodeID", startNode.attr("id"))
+					.attr("endNodeID", endNode.attr("id"));
+
+					//edge line element
+					let edgeGraphic = newEdge.append("line")
+					.attr("stroke-width",baseThis.edgeThickness)
+					.attr("stroke", "black");
+
+					if (!baseThis.edgeDict[startNode.attr("id")]) {
+						baseThis.edgeDict[startNode.attr("id")] = [];
+					}
+					baseThis.edgeDict[startNode.attr("id")].push(newEdge);
+					if (!baseThis.edgeDict[endNode.attr("id")]) {
+						baseThis.edgeDict[endNode.attr("id")] = [];
+					}
+					baseThis.edgeDict[endNode.attr("id")].push(newEdge);
+
+					baseThis.recalculateEdge(newEdge);
+				}
 			}
 
-			//construct graph edges
-			for (let edge of edges) {
-				let startNode = baseThis.nodeDict[edge.startNode];
-				let endNode = baseThis.nodeDict[edge.endNode];
-
-				if (! (startNode && endNode)) {
-					continue;
-				}
-
-				let startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
-				let startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
-				let endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
-				let endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
-				
-				let edgeWidth = Math.abs(startNodeX - endNodeX);
-				let edgeHeight = Math.abs(startNodeY - endNodeY);
-				
-				//edge parent
-				let newEdge = edgeParent.append("svg")
-				.attr("startNodeID", startNode.attr("id"))
-				.attr("endNodeID", endNode.attr("id"));
-
-				//edge line element
-				let edgeGraphic = newEdge.append("line")
-				.attr("stroke-width",baseThis.edgeThickness)
-				.attr("stroke", "black");
-
-				if (!baseThis.edgeDict[edge.startNode]) {
-					baseThis.edgeDict[edge.startNode] = [];
-				}
-				baseThis.edgeDict[edge.startNode].push(newEdge);
-				if (!baseThis.edgeDict[edge.endNode]) {
-					baseThis.edgeDict[edge.endNode] = [];
-				}
-				baseThis.edgeDict[edge.endNode].push(newEdge);
-
-				baseThis.recalculateEdge(newEdge);
-			}
 		});
 	}
 
