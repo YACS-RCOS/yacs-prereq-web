@@ -73,9 +73,8 @@ export class GraphComponent implements OnInit {
 
 		//hard-code nodes and edges until we reimplement loading prereqs from JSON
 		type edge = {startNode: string, endNode: string}
-		let nodeNames: string[] = ["CS1100", "CS1200"]
-		let edges : edge[] = []
-		edges.push({startNode:"CS1100",endNode:"CS1200"})
+		let nodeNames: string[] = ["CS1100", "CS1200", "CS2100"]
+		let edges : edge[] = [({startNode:"CS1100",endNode:"CS1200"}),({startNode:"CS1200",endNode:"CS2100"})]
 		
 		//dictionary of 'name' : 'svg parent' for easy node access
 		this.nodeDict = {};
@@ -125,9 +124,9 @@ export class GraphComponent implements OnInit {
 	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
 
 	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-	        	let connectedEdge = baseThis.edgeDict[baseThis.dragNode.attr("id")];
-	        	if (connectedEdge) {
-	        		baseThis.recalculateEdge(connectedEdge);
+	        	let connectedEdges = baseThis.edgeDict[baseThis.dragNode.attr("id")];
+	        	for (let curEdge of connectedEdges) {
+	        		baseThis.recalculateEdge(curEdge);
 	        	}
 	        	baseThis.startCoords[0] += dx;
 	        	baseThis.startCoords[1] += dy;
@@ -197,8 +196,14 @@ export class GraphComponent implements OnInit {
 			.attr("stroke-width",this.edgeThickness)
 			.attr("stroke", "black");
 
-			this.edgeDict[edge.startNode] = newEdge;
-			this.edgeDict[edge.endNode] = newEdge;
+			if (!this.edgeDict[edge.startNode]) {
+				this.edgeDict[edge.startNode] = [];
+			}
+			this.edgeDict[edge.startNode].push(newEdge);
+			if (!this.edgeDict[edge.endNode]) {
+				this.edgeDict[edge.endNode] = [];
+			}
+			this.edgeDict[edge.endNode].push(newEdge);
 
 			this.recalculateEdge(newEdge);
 		}
@@ -246,6 +251,16 @@ export class GraphComponent implements OnInit {
 			edgeLine.attr("y1",edgeHeight + this.edgeThickness/ 2)
 			edgeLine.attr("y2", this.edgeThickness / 2);
 		}
+
+
+
+		//load in course data
+		/*var req = new XMLHttpRequest();
+		req.open('GET', '/prereq_data.json');
+		req.onreadystatechange = function() {
+			console.log("LOADED PREREQ DATA");
+		}
+		req.send();*/
 	}
 
 	updateGraph() {
