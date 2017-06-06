@@ -53,8 +53,8 @@ export class GraphComponent implements OnInit {
 	}
 
 	createGraph() {
-		var width = window.innerWidth;
-		var height = window.innerHeight;
+		let width = window.innerWidth;
+		let height = window.innerHeight;
 
 		let element = this.graphContainer.nativeElement;
 		this.graph = d3.select(element).append('svg')
@@ -68,14 +68,14 @@ export class GraphComponent implements OnInit {
 		this.edgeThickness = 4;
 		this.nodeSpacing = 24;
 
-		var curX: number = width / 2;
-		var curY: number = height / 2;
+		let curX: number = width / 2;
+		let curY: number = height / 2;
 
 		//hard-code nodes and edges until we reimplement loading prereqs from JSON
 		type edge = {startNode: string, endNode: string}
-		var nodeNames: string[] = ["1100", "1200"]
+		let nodeNames: string[] = ["CS1100", "CS1200"]
 		let edges : edge[] = []
-		edges.push({startNode:"1100",endNode:"1200"})
+		edges.push({startNode:"CS1100",endNode:"CS1200"})
 		
 		//dictionary of 'name' : 'svg parent' for easy node access
 		this.nodeDict = {};
@@ -83,21 +83,21 @@ export class GraphComponent implements OnInit {
 		this.edgeDict = {};
 
 		//maintain a reference to this in case we need to access it while inside a selection
-		var baseThis = this;
+		let baseThis = this;
 
 		//construct edge and node group parents
-		var edgeParent = this.graph.append("g").attr("id","edges");
-		var nodeParent = this.graph.append("g").attr("id","nodes");
+		let edgeParent = this.graph.append("g").attr("id","edges");
+		let nodeParent = this.graph.append("g").attr("id","nodes");
 
 		//setup mouse events on graph
 		this.graph.on("mousedown", function() {
 			//poll for closest node on mouseDown
 			baseThis.startCoords = d3.mouse(this);
-			var closestNode = null;
-			var closestDistance = -1;
-			for (var nodeKey in baseThis.nodeDict) {
-				var curCircle = baseThis.nodeDict[nodeKey];
-				var curDistance = Math.sqrt(
+			let closestNode = null;
+			let closestDistance = -1;
+			for (let nodeKey in baseThis.nodeDict) {
+				let curCircle = baseThis.nodeDict[nodeKey];
+				let curDistance = Math.sqrt(
 					Math.pow(+curCircle.attr("x") + +curCircle.attr("width") / 2 - baseThis.startCoords[0], 2) +
 					Math.pow(+curCircle.attr("y") + +curCircle.attr("height") / 2 - baseThis.startCoords[1], 2));
 				if (closestDistance == -1 || curDistance < closestDistance) {
@@ -116,16 +116,16 @@ export class GraphComponent implements OnInit {
 		.on("mousemove", function() {
 			//check for node dragging
 			if (baseThis.dragging) {
-				var coords = d3.mouse(this);
-	            var dx = (coords[0] - baseThis.startCoords[0]);
-	            var dy = (coords[1] - baseThis.startCoords[1]);
+				let coords = d3.mouse(this);
+	            let dx = (coords[0] - baseThis.startCoords[0]);
+	            let dy = (coords[1] - baseThis.startCoords[1]);
 	            console.log(dx)
 	            //note the use of the unary operator '+' to convert string attr to int (the first '+' is NOT a concatenation)
 	            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
 	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
 
 	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-	        	var connectedEdge = baseThis.edgeDict[baseThis.dragNode.attr("id")];
+	        	let connectedEdge = baseThis.edgeDict[baseThis.dragNode.attr("id")];
 	        	if (connectedEdge) {
 	        		baseThis.recalculateEdge(connectedEdge);
 	        	}
@@ -140,7 +140,8 @@ export class GraphComponent implements OnInit {
 
 		//construct graph nodes
 		for (let name of nodeNames) {
-			var circle = nodeParent.append("svg")
+			//node parent
+			let circle = nodeParent.append("svg")
 				.attr("x", curX)
 				.attr("y", curY)
 				.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
@@ -148,7 +149,8 @@ export class GraphComponent implements OnInit {
 				.attr("isDown",true)
 				.attr("id",name)  
 
-			var circleGraphic = circle.append("circle")
+			//node circle element
+			let circleGraphic = circle.append("circle")
 				.attr("cx", this.nodeRadius + this.strokeThickness)
 				.attr("cy", this.nodeRadius + this.strokeThickness)
 				.attr("r", this.nodeRadius)
@@ -156,13 +158,16 @@ export class GraphComponent implements OnInit {
 				.attr("stroke-width", this.strokeThickness)
 				.attr("fill", "rgb(200,200,255)");
 
-			var circleText = circle.append("text")
+			//node text element
+			let circleText = circle.append("text")
+				.attr("class", "svgtxt")
 				.attr("x", this.nodeRadius + this.strokeThickness)
 				.attr("y", this.nodeRadius + this.strokeThickness)
 				.attr("font-size", "20px")
 				.attr("text-anchor", "middle")
 				.attr("alignment-baseline", "central")
 				.text(name);
+				
 
 			this.nodeDict[name] = circle;
 			curY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
@@ -171,22 +176,24 @@ export class GraphComponent implements OnInit {
 
 		//construct graph edges
 		for (let edge of edges) {
-			var startNode = this.nodeDict[edge.startNode];
-			var endNode = this.nodeDict[edge.endNode];
+			let startNode = this.nodeDict[edge.startNode];
+			let endNode = this.nodeDict[edge.endNode];
 
-			var startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
-			var startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
-			var endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
-			var endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
+			let startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
+			let startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
+			let endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
+			let endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
 			
-			var edgeWidth = Math.abs(startNodeX - endNodeX);
-			var edgeHeight = Math.abs(startNodeY - endNodeY);
+			let edgeWidth = Math.abs(startNodeX - endNodeX);
+			let edgeHeight = Math.abs(startNodeY - endNodeY);
 			
-			var newEdge = edgeParent.append("svg")
+			//edge parent
+			let newEdge = edgeParent.append("svg")
 			.attr("startNodeID", startNode.attr("id"))
 			.attr("endNodeID", endNode.attr("id"));
 
-			var edgeGraphic = newEdge.append("line")
+			//edge line element
+			let edgeGraphic = newEdge.append("line")
 			.attr("stroke-width",this.edgeThickness)
 			.attr("stroke", "black");
 
@@ -199,23 +206,23 @@ export class GraphComponent implements OnInit {
 
 	/*recalculate position, dimensions, and line position of connectedEdge*/
 	recalculateEdge (connectedEdge : any) {
-		var edgeLine = connectedEdge.select("line");
+		let edgeLine = connectedEdge.select("line");
 
-		var startNode = this.nodeDict[connectedEdge.attr("startNodeID")];
-		var endNode = this.nodeDict[connectedEdge.attr("endNodeID")];
+		let startNode = this.nodeDict[connectedEdge.attr("startNodeID")];
+		let endNode = this.nodeDict[connectedEdge.attr("endNodeID")];
 
-		var startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
-		var startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
-		var endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
-		var endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
+		let startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
+		let startNodeY = +startNode.attr("y") + +startNode.attr("height") /2;
+		let endNodeX = +endNode.attr("x") + +endNode.attr("width") /2;
+		let endNodeY = +endNode.attr("y") + +endNode.attr("height") /2;
 
-		var minX = Math.min(startNodeX,endNodeX);
-		var maxX = Math.max(startNodeX,endNodeX);
-		var minY = Math.min(startNodeY,endNodeY);
-		var maxY = Math.max(startNodeY,endNodeY);
+		let minX = Math.min(startNodeX,endNodeX);
+		let maxX = Math.max(startNodeX,endNodeX);
+		let minY = Math.min(startNodeY,endNodeY);
+		let maxY = Math.max(startNodeY,endNodeY);
 
-		var edgeWidth = maxX - minX;
-		var edgeHeight = maxY - minY;
+		let edgeWidth = maxX - minX;
+		let edgeHeight = maxY - minY;
 
 		connectedEdge.attr("width", edgeWidth + this.edgeThickness);
 		connectedEdge.attr("height", edgeHeight + this.edgeThickness);
