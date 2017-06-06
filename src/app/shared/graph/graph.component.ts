@@ -34,6 +34,7 @@ export class GraphComponent implements OnInit {
 	private startCoords: [number,number];
 	private dragging: boolean = false;
 	private dragNode: any;
+	private nodeFontSize : number;
 
 	constructor() {
 
@@ -61,17 +62,20 @@ export class GraphComponent implements OnInit {
 
 		let element = this.graphContainer.nativeElement;
 		this.graph = d3.select(element).append('svg')
-			.attr('width', width)
-			.attr('height', height);
+			.attr("width","100%")
+			.attr("height","600")
+			//.attr('width', width)
+			//.attr('height', height);
 
 		// init constants
-		this.nodeRadius = 50;
+		this.nodeRadius = 30;
 		this.userCanEdit = false;
 		this.strokeThickness = 2;
 		this.edgeThickness = 4;
-		this.nodeSpacing = 24;
+		this.nodeSpacing = 12;
+		this.nodeFontSize = 12;
 
-		let curX: number = width / 2;
+		let curX: number = this.nodeSpacing;
 		let curY: number = this.nodeSpacing;
 
 		//hard-code nodes and edges until we reimplement loading prereqs from JSON
@@ -90,13 +94,11 @@ export class GraphComponent implements OnInit {
 			//dictionary of 'name' : 'list of connected edges' for easy edge access
 			baseThis.edgeDict = {};
 
-			for (let node of nodeData) {
-				console.log(node.course_uid);
-			}
-
 			//construct edge and node group parents
 			let edgeParent = baseThis.graph.append("g").attr("id","edges");
 			let nodeParent = baseThis.graph.append("g").attr("id","nodes");
+
+			let nodeCounter = 0;
 
 			//setup mouse events on graph
 			baseThis.graph.on("mousedown", function() {
@@ -175,7 +177,7 @@ export class GraphComponent implements OnInit {
 					.attr("class", "svgtxt")
 					.attr("x", baseThis.nodeRadius + baseThis.strokeThickness)
 					.attr("y", baseThis.nodeRadius + baseThis.strokeThickness)
-					.attr("font-size", "20px")
+					.attr("font-size", baseThis.nodeFontSize + "px")
 					.attr("text-anchor", "middle")
 					.attr("alignment-baseline", "central")
 					.text(node.course_uid);
@@ -183,7 +185,12 @@ export class GraphComponent implements OnInit {
 
 				baseThis.nodeDict[node.course_uid] = circle;
 				curY += (baseThis.nodeRadius + baseThis.strokeThickness) * 2 + baseThis.nodeSpacing;
-				curX += 50;
+				++nodeCounter;
+				if (nodeCounter == 5) {
+					nodeCounter = 0;
+					curX += (baseThis.nodeRadius + baseThis.strokeThickness) * 2 + baseThis.nodeSpacing;
+					curY = baseThis.nodeSpacing;
+				}
 			}
 
 			//construct graph edges
