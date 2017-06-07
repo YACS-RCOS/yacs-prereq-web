@@ -136,7 +136,8 @@ export class GraphComponent implements OnInit {
 		.on("mouseup", function() {
 			baseThis.dragging = false;
 		});
-		var req = new XMLHttpRequest();
+		
+		/*var req = new XMLHttpRequest();
 		req.open('GET', 'http://localhost:3100/cs/all');
 		req.onreadystatechange = function() {
 			if (req.readyState === 4) {
@@ -154,9 +155,9 @@ export class GraphComponent implements OnInit {
 					}
 				}
 			}
-		}
+		}*/
 		//load in graph data from prereq file
-		/*d3.json("/assets/prereq_data.json", function(prereqs) {
+		d3.json("http://localhost:3100/cs/all", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
@@ -170,7 +171,7 @@ export class GraphComponent implements OnInit {
 				}
 			}
 
-		});*/
+		});
 	}
 
 	/*construct a new node from a course uid*/

@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:alpine
 
 ENV APP_DIR /usr/src/app/
 RUN mkdir -p $APP_DIR
