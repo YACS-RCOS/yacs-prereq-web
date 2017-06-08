@@ -157,7 +157,8 @@ export class GraphComponent implements OnInit {
 			}
 		}*/
 		//load in graph data from prereq file
-		d3.json("http://localhost:3100/cs/all", function(prereqs) {
+		//d3.json("http://localhost:3100/cs/all", function(prereqs) {
+		d3.json("assets/prereq_data.json", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
@@ -169,6 +170,9 @@ export class GraphComponent implements OnInit {
 				for (let edge of node.prereq_formula) {
 					baseThis.constructEdge(circle,baseThis.nodeDict[edge]);
 				}
+			}
+			for (let metaNode of metaNodeData) {
+				let circle = baseThis.constructNode(metaNode.meta_uid);
 			}
 
 		});
