@@ -162,6 +162,11 @@ export class GraphComponent implements OnInit {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
+			//first construct meta-nodes as standard nodes depend on their existence for edge creation
+			for (let metaNode of metaNodeData) {
+				let circle = baseThis.constructNode(metaNode.meta_uid);
+			}
+
 			//construct graph nodes
 			for (let node of nodeData) {
 				let circle = baseThis.constructNode(node.course_uid);
@@ -171,10 +176,6 @@ export class GraphComponent implements OnInit {
 					baseThis.constructEdge(circle,baseThis.nodeDict[edge]);
 				}
 			}
-			for (let metaNode of metaNodeData) {
-				let circle = baseThis.constructNode(metaNode.meta_uid);
-			}
-
 		});
 	}
 
