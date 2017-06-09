@@ -29,6 +29,8 @@ export class GraphComponent implements OnInit {
 	private nodeDict: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access
 	private edgeDict: any = {};
+	//list of lists, where each list contains the order in which nodes appear in the column corresponding to the list #
+	private columnList : any = [];
 
 	//mouse drag vars
 	private startCoords: [number,number];
@@ -36,9 +38,9 @@ export class GraphComponent implements OnInit {
 	private dragNode: any;
 
 	private nodeFontSize : number;
-	private nodeCounter : number = 0;
+	/*private nodeCounter : number = 0;
 	private curNodeX : number;
-	private curNodeY : number;
+	private curNodeY : number;*/
 	private graph: any;
 	private nodeParent : any;
 	private edgeParent : any;
@@ -69,7 +71,7 @@ export class GraphComponent implements OnInit {
 		this.strokeThickness = 2;
 		this.edgeThickness = 4;
 		this.nodeSpacing = 12;
-		this.curNodeX = this.curNodeY = this.nodeSpacing;
+		/*this.curNodeX = this.curNodeY = this.nodeSpacing;*/
 		this.nodeFontSize = 12;
 
 		//construct graph
@@ -165,6 +167,7 @@ export class GraphComponent implements OnInit {
 			//first construct meta-nodes as standard nodes depend on their existence for edge creation
 			for (let metaNode of metaNodeData) {
 				let circle = baseThis.constructNode(metaNode.meta_uid);
+				baseThis.setColNum(circle,0);
 			}
 
 			//construct graph nodes
@@ -175,16 +178,31 @@ export class GraphComponent implements OnInit {
 				for (let edge of node.prereq_formula) {
 					baseThis.constructEdge(circle,baseThis.nodeDict[edge]);
 				}
+				if (node.prereq_formula.length == 0) {
+					baseThis.setColNum(circle,0);
+				}
 			}
 		});
+	}
+
+	/*move Node node to column colNum*/
+	setColNum(node : any, colNum: number) {
+		//make sure we have enough columns
+		while (this.columnList.length < (colNum+1)) {
+			this.columnList.push([]);
+		}
+		this.columnList[colNum].push(node);
+		node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
+		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
 	}
 
 	/*construct a new node from a course uid*/
 	constructNode(cuid : string) {
 		//node parent
 		let circle = this.nodeParent.append("svg")
-			.attr("x", this.curNodeX)
-			.attr("y", this.curNodeY)
+			.attr("column",0)
+			/*.attr("x", this.curNodeX)
+			.attr("y", this.curNodeY)*/
 			.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("isDown",true)
@@ -211,13 +229,13 @@ export class GraphComponent implements OnInit {
 			
 
 		this.nodeDict[cuid] = circle;
-		this.curNodeY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
+		/*this.curNodeY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
 		++this.nodeCounter;
 		if (this.nodeCounter == 5) {
 			this.nodeCounter = 0;
 			this.curNodeX += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
 			this.curNodeY = this.nodeSpacing;
-		}
+		}*/
 		return circle;
 	}
 
