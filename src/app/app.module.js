@@ -15,6 +15,7 @@ var app_component_1 = require("./app.component");
 var component_1 = require("./header/component");
 var component_2 = require("./footer/component");
 var constants_1 = require("./services/constants");
+var graph_component_1 = require("./shared/graph/graph.component");
 var AppModule = (function () {
     function AppModule() {
     }
@@ -31,7 +32,8 @@ AppModule = __decorate([
         declarations: [
             app_component_1.AppComponent,
             component_1.HeaderComponent,
-            component_2.FooterComponent
+            component_2.FooterComponent,
+            graph_component_1.GraphComponent
         ],
         providers: [
             constants_1.ConstantsService

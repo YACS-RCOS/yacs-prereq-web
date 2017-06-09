@@ -2,17 +2,18 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
-    "target": "es6",
+    "target": "es5",
     "module": "es6",
     "experimentalDecorators": true,
-    "lib": ["ES2017","ES6", "DOM","ScriptHost"],
+    "lib": ["ES6", "DOM","ScriptHost"],
     "baseUrl": "",
     "types": [
       "jasmine",
+      "node",
+      "d3",
       "node"
     ],
     "outDir": "../out-tsc/app",
-    "module": "es2015",
     "baseUrl": "",
     "types": []
   },

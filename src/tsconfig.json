@@ -8,9 +8,12 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es6",
+    "target": "es5",
     "module": "es6",
-    "lib": ["ES2017","ES6", "DOM","ScriptHost"]
+    "lib": ["ES2017","ES6", "DOM","ScriptHost"],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
   },
   "include": [
     "src/*"
