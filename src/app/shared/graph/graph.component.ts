@@ -77,7 +77,8 @@ export class GraphComponent implements OnInit {
 		//construct graph
 		this.graph = d3.select(this.graphContainer.nativeElement).append('svg')
 			.attr("width","100%")
-			.attr("height","600")
+			.attr("height","6000")
+			/*.attr("height","600")*/
 
 		//construct edge and node group parents
 		this.edgeParent = this.graph.append("g").attr("id","edges");
@@ -182,25 +183,56 @@ export class GraphComponent implements OnInit {
 					baseThis.setColNum(circle,0);
 				}
 			}
+
+			baseThis.layoutColumns();
 		});
+	}
+
+	/*organize nodes into columns based on their prereqs*/
+	layoutColumns() {
+		for (let node of this.columnList[0]) {
+			this.layoutFromNode(node,0);
+		}
+	}
+
+	/*layout nodes that stem from current node*/
+	layoutFromNode(node : any, colNum : number) {
+		if (node.attr("column") != colNum) {
+			this.setColNum(node,colNum);
+		}
+		if (this.edgeDict[node.attr("id")]) {
+			for (let edge of this.edgeDict[node.attr("id")]) {
+				if (edge.attr("endNodeID") == node.attr("id")) {
+					this.layoutFromNode(this.nodeDict[edge.attr("startNodeID")],colNum+1);
+					this.recalculateEdge(edge);
+				}
+			}
+		}
+		
 	}
 
 	/*move Node node to column colNum*/
 	setColNum(node : any, colNum: number) {
-		//make sure we have enough columns
-		while (this.columnList.length < (colNum+1)) {
-			this.columnList.push([]);
+		//TODO: allow changing columns after it has been set
+		//no effect unless the node hasnt been assigned a column yet
+		if (+node.attr("column") == -1) {
+			//make sure we have enough columns
+			while (this.columnList.length < (colNum+1)) {
+				this.columnList.push([]);
+			}
+			this.columnList[colNum].push(node);
+			node.attr("column",colNum);
+			node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
+			node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
+
 		}
-		this.columnList[colNum].push(node);
-		node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
-		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
 	}
 
 	/*construct a new node from a course uid*/
 	constructNode(cuid : string) {
 		//node parent
 		let circle = this.nodeParent.append("svg")
-			.attr("column",0)
+			.attr("column",-1)
 			/*.attr("x", this.curNodeX)
 			.attr("y", this.curNodeY)*/
 			.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
