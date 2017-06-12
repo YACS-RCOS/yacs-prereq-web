@@ -175,9 +175,12 @@ export class GraphComponent implements OnInit {
 			for (let node of nodeData) {
 				let circle = baseThis.constructNode(node.course_uid);
 
-				//construct edges based off of this node's prereqs
+				//construct edges based off of this node's prereqs and coreqs
 				for (let edge of node.prereq_formula) {
-					baseThis.constructEdge(circle,baseThis.nodeDict[edge]);
+					baseThis.constructEdge(circle,baseThis.nodeDict[edge],"prereq");
+				}
+				for (let edge of node.coreq_formula) {
+					baseThis.constructEdge(circle,baseThis.nodeDict[edge],"coreq");
 				}
 				if (node.prereq_formula.length == 0) {
 					baseThis.setColNum(circle,0);
@@ -272,7 +275,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	/*construct a new edge from start and end node, if they exist*/
-	constructEdge(startNode : any, endNode : any) {
+	constructEdge(startNode : any, endNode : any, type : string) {
 		if (! (startNode && endNode)) {
 			return;
 		}
@@ -293,7 +296,7 @@ export class GraphComponent implements OnInit {
 		//edge line element
 		let edgeGraphic = newEdge.append("line")
 		.attr("stroke-width",this.edgeThickness)
-		.attr("stroke", "black");
+		.attr("stroke", type == "prereq" ? "red" : "green");
 
 		if (!this.edgeDict[startNode.attr("id")]) {
 			this.edgeDict[startNode.attr("id")] = [];
