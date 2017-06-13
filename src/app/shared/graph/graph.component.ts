@@ -77,7 +77,7 @@ export class GraphComponent implements OnInit {
 		//construct graph
 		this.graph = d3.select(this.graphContainer.nativeElement).append('svg')
 			.attr("width","100%")
-			.attr("height","6000")
+			.attr("height","2500")
 			/*.attr("height","600")*/
 
 		//construct edge and node group parents
@@ -256,13 +256,14 @@ export class GraphComponent implements OnInit {
 
 		//node text element
 		let circleText = circle.append("text")
-			.attr("class", "svgtxt")
+			.classed('noselect', true)
 			.attr("x", this.nodeRadius + this.strokeThickness)
 			.attr("y", this.nodeRadius + this.strokeThickness)
 			.attr("font-size", this.nodeFontSize + "px")
 			.attr("text-anchor", "middle")
 			.attr("alignment-baseline", "central")
 			.text(cuid);
+		console.log(circleText.classed('noselect'));
 			
 
 		this.nodeDict[cuid] = circle;
