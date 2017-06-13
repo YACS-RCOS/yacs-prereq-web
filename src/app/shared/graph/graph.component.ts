@@ -69,7 +69,7 @@ export class GraphComponent implements OnInit {
 		// init constants
 		this.nodeRadius = 30;
 		this.strokeThickness = 2;
-		this.edgeThickness = 4;
+		this.edgeThickness = 2;
 		this.nodeSpacing = 12;
 		/*this.curNodeX = this.curNodeY = this.nodeSpacing;*/
 		this.nodeFontSize = 12;
@@ -140,28 +140,12 @@ export class GraphComponent implements OnInit {
 			baseThis.dragging = false;
 		});
 		
-		/*var req = new XMLHttpRequest();
-		req.open('GET', 'http://localhost:3100/cs/all');
-		req.onreadystatechange = function() {
-			if (req.readyState === 4) {
-				let prereqs = JSON.parse(req.responseText);
-				let nodeData = prereqs["CSCI_nodes"];
-				let metaNodeData = prereqs["meta_nodes"];
-
-				//construct graph nodes
-				for (let node of nodeData) {
-					let circle = baseThis.constructNode(node.course_uid);
-
-					//construct edges based off of this node's prereqs
-					for (let edge of node.prereq_formula) {
-						baseThis.constructEdge(circle,baseThis.nodeDict[edge]);
-					}
-				}
-			}
-		}*/
 		//load in graph data from prereq file
-		//d3.json("http://localhost:3100/cs/all", function(prereqs) {
+		//d3.json("http://localhost:3100/cs/all")
+		//.header("X-Requested-With", null)
+		//.get(function(error,prereqs) {
 		d3.json("assets/prereq_data.json", function(prereqs) {
+			console.log(prereqs)
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 

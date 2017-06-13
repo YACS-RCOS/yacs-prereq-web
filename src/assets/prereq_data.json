@@ -1,4 +1,45 @@
 {
+    "MATH_nodes":
+    [   
+        {
+            "course_uid":               "MATH-1010",
+            "prereq_formula":           [],
+            "coreq_formula":            [],
+            "suggested_prereq_formula": [],
+            "suggested_coreq_formula":  []
+        },
+        {
+            "course_uid":               "MATH-1020",
+            "prereq_formula":           ["MATH-1010"],
+            "coreq_formula":            [],
+            "suggested_prereq_formula": [],
+            "suggested_coreq_formula":  []
+        },
+        {
+            "course_uid":               "MATH-2010",
+            "prereq_formula":           ["MATH-1010"],
+            "coreq_formula":            [],
+            "suggested_prereq_formula": [],
+            "suggested_coreq_formula":  []
+        },
+        {
+            "course_uid":               "MATH-2400",
+            "prereq_formula":           ["MATH-1020"],
+            "coreq_formula":            [],
+            "suggested_prereq_formula": ["MATH-1020","MATH-2010"],
+            "suggested_coreq_formula":  []
+        }
+    ],
+    "ENGR_nodes":
+    [   
+        {
+            "course_uid":               "ENGR-1100",
+            "prereq_formula":           [],
+            "coreq_formula":            [],
+            "suggested_prereq_formula": [],
+            "suggested_coreq_formula":  []
+        }
+    ],
     "CSCI_nodes":
     [
         {
