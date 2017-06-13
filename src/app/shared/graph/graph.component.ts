@@ -145,19 +145,17 @@ export class GraphComponent implements OnInit {
 		//.header("X-Requested-With", null)
 		//.get(function(error,prereqs) {
 		d3.json("assets/prereq_data.json", function(prereqs) {
-			console.log(prereqs)
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
 			//first construct meta-nodes as standard nodes depend on their existence for edge creation
 			for (let metaNode of metaNodeData) {
-				let circle = baseThis.constructNode(metaNode.meta_uid);
-				baseThis.setColNum(circle,0);
+				let circle = baseThis.constructNode(metaNode.meta_uid,metaNode.contains);
 			}
 
 			//construct graph nodes
 			for (let node of nodeData) {
-				let circle = baseThis.constructNode(node.course_uid);
+				let circle = baseThis.constructNode(node.course_uid,null);
 
 				//construct edges based off of this node's prereqs and coreqs
 				for (let edge of node.prereq_formula) {
@@ -171,7 +169,10 @@ export class GraphComponent implements OnInit {
 				}
 			}
 
+			//layout standard nodes and edges
 			baseThis.layoutColumns();
+
+
 		});
 	}
 
@@ -179,12 +180,28 @@ export class GraphComponent implements OnInit {
 	layoutColumns() {
 		for (let node of this.columnList[0]) {
 			this.layoutFromNode(node,0);
+			console.log(node.containedNodeIds);
+			
+		}
+
+		//once nodes have been placed, move meta nodes to the same column as their farthest contained node
+		for (let key in this.nodeDict) {
+			let curNode = this.nodeDict[key];
+			if (curNode.containedNodeIds != null) {
+				let farthestColumn = 0;
+				for (let i = 0; i < curNode.containedNodeIds.length; ++i) {
+					let curContainedNode = this.nodeDict[curNode.containedNodeIds[i]];
+					farthestColumn = Math.max(farthestColumn,curContainedNode? +curContainedNode.attr("column") : 0);
+				}
+				console.log(farthestColumn);
+				this.layoutFromNode(curNode,farthestColumn);
+			}
 		}
 	}
 
 	/*layout nodes that stem from current node*/
 	layoutFromNode(node : any, colNum : number) {
-		if (node.attr("column") != colNum) {
+		if (+node.attr("column") != colNum) {
 			this.setColNum(node,colNum);
 		}
 		if (this.edgeDict[node.attr("id")]) {
@@ -216,7 +233,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	/*construct a new node from a course uid*/
-	constructNode(cuid : string) {
+	constructNode(cuid : string, containedNodeIds : string[]) {
 		//node parent
 		let circle = this.nodeParent.append("svg")
 			.attr("column",-1)
@@ -226,6 +243,7 @@ export class GraphComponent implements OnInit {
 			.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("isDown",true)
 			.attr("id",cuid)  
+		circle.containedNodeIds = containedNodeIds;
 
 		//node circle element
 		let circleGraphic = circle.append("circle")
