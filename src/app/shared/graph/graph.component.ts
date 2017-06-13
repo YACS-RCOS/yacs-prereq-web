@@ -158,13 +158,15 @@ export class GraphComponent implements OnInit {
 				let circle = baseThis.constructNode(node.course_uid,null);
 
 				//construct edges based off of this node's prereqs and coreqs
+				let hasValidEdge = false;
 				for (let edge of node.prereq_formula) {
-					baseThis.constructEdge(circle,baseThis.nodeDict[edge],"prereq");
+					hasValidEdge = baseThis.constructEdge(circle,baseThis.nodeDict[edge],"prereq") || hasValidEdge;
 				}
 				for (let edge of node.coreq_formula) {
 					baseThis.constructEdge(circle,baseThis.nodeDict[edge],"coreq");
 				}
-				if (node.prereq_formula.length == 0) {
+				//start at column 0 if we have no prereqs or our prereqs are not in the dataset
+				if (node.prereq_formula.length == 0 || !hasValidEdge) {
 					baseThis.setColNum(circle,0);
 				}
 			}
@@ -178,10 +180,9 @@ export class GraphComponent implements OnInit {
 
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
+		//start by laying out nodes branching from first column (nodes with no dependencies)
 		for (let node of this.columnList[0]) {
-			this.layoutFromNode(node,0);
-			console.log(node.containedNodeIds);
-			
+			this.layoutFromNode(node,0);			
 		}
 
 		//once nodes have been placed, move meta nodes to the same column as their farthest contained node
@@ -193,7 +194,6 @@ export class GraphComponent implements OnInit {
 					let curContainedNode = this.nodeDict[curNode.containedNodeIds[i]];
 					farthestColumn = Math.max(farthestColumn,curContainedNode? +curContainedNode.attr("column") : 0);
 				}
-				console.log(farthestColumn);
 				this.layoutFromNode(curNode,farthestColumn);
 			}
 		}
@@ -279,7 +279,7 @@ export class GraphComponent implements OnInit {
 	/*construct a new edge from start and end node, if they exist*/
 	constructEdge(startNode : any, endNode : any, type : string) {
 		if (! (startNode && endNode)) {
-			return;
+			return false;
 		}
 
 		let startNodeX = +startNode.attr("x") + +startNode.attr("width") /2;
@@ -310,6 +310,7 @@ export class GraphComponent implements OnInit {
 		this.edgeDict[endNode.attr("id")].push(newEdge);
 
 		this.recalculateEdge(newEdge);
+		return true;
 	}
 
 	/*recalculate position, dimensions, and line position of connectedEdge*/
