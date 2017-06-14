@@ -140,11 +140,8 @@ export class GraphComponent implements OnInit {
 			baseThis.dragging = false;
 		});
 		
-		//load in graph data from prereq file
-		//d3.json("http://localhost:3100/cs/all")
-		//.header("X-Requested-With", null)
-		//.get(function(error,prereqs) {
-		d3.json("assets/prereq_data.json", function(prereqs) {
+		//load in graph data from prereq file (hosted by data service)
+		d3.json("http://localhost:3100/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
