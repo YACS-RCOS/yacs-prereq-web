@@ -13,6 +13,16 @@ import * as d3 from 'd3';
 	selector: 'app-graph',
 	templateUrl: './graph.component.html',
 	styleUrls: ['./graph.component.css']
+	 /*styles: [`
+    .noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+	}
+  `]*/
 })
 
 export class GraphComponent implements OnInit {
@@ -124,13 +134,7 @@ export class GraphComponent implements OnInit {
 	            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
 	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
 
-	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-	        	let connectedEdges = baseThis.edgeDict[baseThis.dragNode.attr("id")];
-	        	if (connectedEdges) {
-	        		for (let curEdge of connectedEdges) {
-	        			baseThis.recalculateEdge(curEdge);
-	        		}
-	        	}
+	        	baseThis.fixEdges(baseThis.dragNode.attr("id"));
 	        	baseThis.startCoords[0] += dx;
 		        baseThis.startCoords[1] += dy;
 			}
@@ -157,6 +161,7 @@ export class GraphComponent implements OnInit {
 				//construct edges based off of this node's prereqs and coreqs
 				let hasValidEdge = false;
 				for (let edge of node.prereq_formula) {
+					console.log(edge)
 					hasValidEdge = baseThis.constructEdge(circle,baseThis.nodeDict[edge],"prereq") || hasValidEdge;
 				}
 				for (let edge of node.coreq_formula) {
@@ -175,6 +180,16 @@ export class GraphComponent implements OnInit {
 		});
 	}
 
+	/*recalculate all edges connected to node id*/
+	fixEdges(nodeID : string) {
+		let connectedEdges = this.edgeDict[nodeID];
+    	if (connectedEdges) {
+    		for (let curEdge of connectedEdges) {
+    			this.recalculateEdge(curEdge);
+    		}
+    	}
+	}
+
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
@@ -182,7 +197,7 @@ export class GraphComponent implements OnInit {
 			this.layoutFromNode(node,0);			
 		}
 
-		//once nodes have been placed, move meta nodes to the same column as their farthest contained node
+		//move meta nodes to the same column as their farthest contained node, and stick 6000+ level classes at the end
 		for (let key in this.nodeDict) {
 			let curNode = this.nodeDict[key];
 			if (curNode.containedNodeIds != null) {
@@ -192,6 +207,9 @@ export class GraphComponent implements OnInit {
 					farthestColumn = Math.max(farthestColumn,curContainedNode? +curContainedNode.attr("column") : 0);
 				}
 				this.layoutFromNode(curNode,farthestColumn);
+			}
+			else if (+curNode.attr("id")[5] >= 6) {
+				this.setColNum(curNode,this.columnList.length-1,true);
 			}
 		}
 	}
@@ -213,20 +231,41 @@ export class GraphComponent implements OnInit {
 	}
 
 	/*move Node node to column colNum*/
-	setColNum(node : any, colNum: number) {
-		//TODO: allow changing columns after it has been set
-		//no effect unless the node hasnt been assigned a column yet
-		if (+node.attr("column") == -1) {
+	setColNum(node : any, colNum: number, allowColumnChange = false) {
+		if (colNum == node.attr("column")) {
+			return;
+		}
+		if (+node.attr("column") == -1 || allowColumnChange) {
 			//make sure we have enough columns
 			while (this.columnList.length < (colNum+1)) {
 				this.columnList.push([]);
 			}
+			if (+node.attr("column") != -1) {
+				//remove from current column
+				let oldColumn = this.columnList[+node.attr("column")];
+				let oldIndex = oldColumn.indexOf(node);
+				oldColumn.splice(oldIndex,1);
+				//reposition displaced nodes
+				for (let i = oldIndex; i <oldColumn.length; ++i) {
+					console.log("'wew")
+					this.repositionNode(+node.attr("column"),i);
+				}
+			}
+			
+			//add to new column
 			this.columnList[colNum].push(node);
-			node.attr("column",colNum);
-			node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
-			node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
+			this.repositionNode(colNum,this.columnList[colNum].length-1);
 
 		}
+	}
+
+	/*reposition node at position colNum[index]*/
+	repositionNode(colNum : number, index : number) {
+		let node = this.columnList[colNum][index];
+		node.attr("column",colNum);
+		node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
+		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
+		this.fixEdges(node.attr("id"));
 	}
 
 	/*construct a new node from a course uid*/
