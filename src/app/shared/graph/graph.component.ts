@@ -13,6 +13,16 @@ import * as d3 from 'd3';
 	selector: 'app-graph',
 	templateUrl: './graph.component.html',
 	styleUrls: ['./graph.component.scss']
+	 /*styles: [`
+    .noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+	}
+  `]*/
 })
 
 export class GraphComponent implements OnInit {
@@ -38,9 +48,6 @@ export class GraphComponent implements OnInit {
 	private dragNode: any;
 
 	private nodeFontSize : number;
-	/*private nodeCounter : number = 0;
-	private curNodeX : number;
-	private curNodeY : number;*/
 	private graph: any;
 	private nodeParent : any;
 	private edgeParent : any;
@@ -50,6 +57,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
+		this.initConstants();
 		this.createGraph();
 		if (this.data) {
 			this.updateGraph();
@@ -62,17 +70,19 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	createGraph() {
-		//maintain a reference to this in case we need to access it while inside a selection
-		let baseThis = this;
-
-		// init constants
+	/*initialize constant instance variables here*/
+	initConstants() {
 		this.nodeRadius = 30;
 		this.strokeThickness = 2;
 		this.edgeThickness = 2;
 		this.nodeSpacing = 12;
-		/*this.curNodeX = this.curNodeY = this.nodeSpacing;*/
 		this.nodeFontSize = 12;
+	}
+
+	/*create the main graph svg and load in the course data*/
+	createGraph() {
+		//maintain a reference to this in case we need to access it while inside a selection
+		let baseThis = this;
 
 		//construct graph
 		this.graph = d3.select(this.graphContainer.nativeElement).append('svg')
@@ -124,13 +134,7 @@ export class GraphComponent implements OnInit {
 	            baseThis.dragNode.attr("x", +baseThis.dragNode.attr("x") + dx);
 	        	baseThis.dragNode.attr("y", +baseThis.dragNode.attr("y") + dy);
 
-	        	//move all connected edges depending on whether we are the startNode or the endNode of that edge
-	        	let connectedEdges = baseThis.edgeDict[baseThis.dragNode.attr("id")];
-	        	if (connectedEdges) {
-	        		for (let curEdge of connectedEdges) {
-	        			baseThis.recalculateEdge(curEdge);
-	        		}
-	        	}
+	        	baseThis.fixEdges(baseThis.dragNode.attr("id"));
 	        	baseThis.startCoords[0] += dx;
 		        baseThis.startCoords[1] += dy;
 			}
@@ -140,7 +144,12 @@ export class GraphComponent implements OnInit {
 			baseThis.dragging = false;
 		});
 		
-		//load in graph data from prereq file (hosted by data service)
+		this.loadGraphData();
+	}
+
+	/*load in graph data from prereq file (hosted by data service)*/
+	loadGraphData() {
+		let baseThis = this;
 		d3.json("http://localhost:3100/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
@@ -175,6 +184,16 @@ export class GraphComponent implements OnInit {
 		});
 	}
 
+	/*recalculate all edges connected to node id*/
+	fixEdges(nodeID : string) {
+		let connectedEdges = this.edgeDict[nodeID];
+    	if (connectedEdges) {
+    		for (let curEdge of connectedEdges) {
+    			this.recalculateEdge(curEdge);
+    		}
+    	}
+	}
+
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
@@ -182,7 +201,7 @@ export class GraphComponent implements OnInit {
 			this.layoutFromNode(node,0);			
 		}
 
-		//once nodes have been placed, move meta nodes to the same column as their farthest contained node
+		//move meta nodes to the same column as their farthest contained node, and stick 6000+ level classes at the end
 		for (let key in this.nodeDict) {
 			let curNode = this.nodeDict[key];
 			if (curNode.containedNodeIds != null) {
@@ -193,10 +212,13 @@ export class GraphComponent implements OnInit {
 				}
 				this.layoutFromNode(curNode,farthestColumn);
 			}
+			else if (+curNode.attr("id")[5] >= 6) {
+				this.setColNum(curNode,this.columnList.length-1,true);
+			}
 		}
 	}
 
-	/*layout nodes that stem from current node*/
+	/*layout nodes stemming from current node*/
 	layoutFromNode(node : any, colNum : number) {
 		if (+node.attr("column") != colNum) {
 			this.setColNum(node,colNum);
@@ -213,20 +235,41 @@ export class GraphComponent implements OnInit {
 	}
 
 	/*move Node node to column colNum*/
-	setColNum(node : any, colNum: number) {
-		//TODO: allow changing columns after it has been set
-		//no effect unless the node hasnt been assigned a column yet
-		if (+node.attr("column") == -1) {
+	setColNum(node : any, colNum: number, allowColumnChange = false) {
+		if (colNum == node.attr("column")) {
+			return;
+		}
+		if (+node.attr("column") == -1 || allowColumnChange) {
 			//make sure we have enough columns
 			while (this.columnList.length < (colNum+1)) {
 				this.columnList.push([]);
 			}
+			if (+node.attr("column") != -1) {
+				//remove from current column
+				let oldColumn = this.columnList[+node.attr("column")];
+				let oldIndex = oldColumn.indexOf(node);
+				oldColumn.splice(oldIndex,1);
+				//reposition displaced nodes
+				for (let i = oldIndex; i <oldColumn.length; ++i) {
+					
+					this.repositionNode(+node.attr("column"),i);
+				}
+			}
+			
+			//add to new column
 			this.columnList[colNum].push(node);
-			node.attr("column",colNum);
-			node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
-			node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
+			this.repositionNode(colNum,this.columnList[colNum].length-1);
 
 		}
+	}
+
+	/*reposition node at position colNum[index]*/
+	repositionNode(colNum : number, index : number) {
+		let node = this.columnList[colNum][index];
+		node.attr("column",colNum);
+		node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
+		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (index));
+		this.fixEdges(node.attr("id"));
 	}
 
 	/*construct a new node from a course uid*/
@@ -234,8 +277,6 @@ export class GraphComponent implements OnInit {
 		//node parent
 		let circle = this.nodeParent.append("svg")
 			.attr("column",-1)
-			/*.attr("x", this.curNodeX)
-			.attr("y", this.curNodeY)*/
 			.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("isDown",true)
@@ -264,13 +305,6 @@ export class GraphComponent implements OnInit {
 			
 
 		this.nodeDict[cuid] = circle;
-		/*this.curNodeY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
-		++this.nodeCounter;
-		if (this.nodeCounter == 5) {
-			this.nodeCounter = 0;
-			this.curNodeX += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
-			this.curNodeY = this.nodeSpacing;
-		}*/
 		return circle;
 	}
 
