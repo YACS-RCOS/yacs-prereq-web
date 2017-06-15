@@ -48,9 +48,6 @@ export class GraphComponent implements OnInit {
 	private dragNode: any;
 
 	private nodeFontSize : number;
-	/*private nodeCounter : number = 0;
-	private curNodeX : number;
-	private curNodeY : number;*/
 	private graph: any;
 	private nodeParent : any;
 	private edgeParent : any;
@@ -60,6 +57,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
+		this.initConstants();
 		this.createGraph();
 		if (this.data) {
 			this.updateGraph();
@@ -72,17 +70,19 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	createGraph() {
-		//maintain a reference to this in case we need to access it while inside a selection
-		let baseThis = this;
-
-		// init constants
+	/*initialize constant instance variables here*/
+	initConstants() {
 		this.nodeRadius = 30;
 		this.strokeThickness = 2;
 		this.edgeThickness = 2;
 		this.nodeSpacing = 12;
-		/*this.curNodeX = this.curNodeY = this.nodeSpacing;*/
 		this.nodeFontSize = 12;
+	}
+
+	/*create the main graph svg and load in the course data*/
+	createGraph() {
+		//maintain a reference to this in case we need to access it while inside a selection
+		let baseThis = this;
 
 		//construct graph
 		this.graph = d3.select(this.graphContainer.nativeElement).append('svg')
@@ -144,7 +144,12 @@ export class GraphComponent implements OnInit {
 			baseThis.dragging = false;
 		});
 		
-		//load in graph data from prereq file (hosted by data service)
+		this.loadGraphData();
+	}
+
+	/*load in graph data from prereq file (hosted by data service)*/
+	loadGraphData() {
+		let baseThis = this;
 		d3.json("http://localhost:3100/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
@@ -214,7 +219,7 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	/*layout nodes that stem from current node*/
+	/*layout nodes stemming from current node*/
 	layoutFromNode(node : any, colNum : number) {
 		if (+node.attr("column") != colNum) {
 			this.setColNum(node,colNum);
@@ -273,8 +278,6 @@ export class GraphComponent implements OnInit {
 		//node parent
 		let circle = this.nodeParent.append("svg")
 			.attr("column",-1)
-			/*.attr("x", this.curNodeX)
-			.attr("y", this.curNodeY)*/
 			.attr("width", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("height", this.nodeRadius * 2 + this.strokeThickness * 2)
 			.attr("isDown",true)
@@ -303,13 +306,6 @@ export class GraphComponent implements OnInit {
 			
 
 		this.nodeDict[cuid] = circle;
-		/*this.curNodeY += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
-		++this.nodeCounter;
-		if (this.nodeCounter == 5) {
-			this.nodeCounter = 0;
-			this.curNodeX += (this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing;
-			this.curNodeY = this.nodeSpacing;
-		}*/
 		return circle;
 	}
 
