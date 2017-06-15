@@ -12,7 +12,7 @@ import * as d3 from 'd3';
 @Component({
 	selector: 'app-graph',
 	templateUrl: './graph.component.html',
-	styleUrls: ['./graph.component.css']
+	styleUrls: ['./graph.component.scss']
 	 /*styles: [`
     .noselect {
     -webkit-touch-callout: none;
@@ -166,7 +166,6 @@ export class GraphComponent implements OnInit {
 				//construct edges based off of this node's prereqs and coreqs
 				let hasValidEdge = false;
 				for (let edge of node.prereq_formula) {
-					console.log(edge)
 					hasValidEdge = baseThis.constructEdge(circle,baseThis.nodeDict[edge],"prereq") || hasValidEdge;
 				}
 				for (let edge of node.coreq_formula) {

@@ -22,7 +22,7 @@ import { GraphComponent } from './shared/graph/graph.component';
     HeaderComponent,
     FooterComponent,
     GraphComponent
-  ],
+    ],
   providers: [
     ConstantsService
   ],
