@@ -12,7 +12,7 @@ import * as d3 from 'd3';
 @Component({
 	selector: 'app-graph',
 	templateUrl: './graph.component.html',
-	styleUrls: ['./graph.component.css']
+	styleUrls: ['./graph.component.scss']
 })
 
 export class GraphComponent implements OnInit {
