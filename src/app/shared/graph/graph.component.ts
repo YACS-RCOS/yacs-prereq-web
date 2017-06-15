@@ -247,7 +247,7 @@ export class GraphComponent implements OnInit {
 				oldColumn.splice(oldIndex,1);
 				//reposition displaced nodes
 				for (let i = oldIndex; i <oldColumn.length; ++i) {
-					console.log("'wew")
+					
 					this.repositionNode(+node.attr("column"),i);
 				}
 			}
@@ -264,7 +264,7 @@ export class GraphComponent implements OnInit {
 		let node = this.columnList[colNum][index];
 		node.attr("column",colNum);
 		node.attr("x",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * colNum);
-		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (this.columnList[colNum].length - 1));
+		node.attr("y",this.nodeSpacing + ((this.nodeRadius + this.strokeThickness) * 2 + this.nodeSpacing) * (index));
 		this.fixEdges(node.attr("id"));
 	}
 
