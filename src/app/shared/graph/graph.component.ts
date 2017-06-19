@@ -87,7 +87,7 @@ export class GraphComponent implements OnInit {
 		//construct graph
 		this.graph = d3.select(this.graphContainer.nativeElement).append('svg')
 			.attr("width","100%")
-			.attr("height","2500")
+			.attr("height","2400")
 			/*.attr("height","600")*/
 
 		//construct edge and node group parents
@@ -201,7 +201,7 @@ export class GraphComponent implements OnInit {
 			this.layoutFromNode(node,0);			
 		}
 
-		//move meta nodes to the same column as their farthest contained node, and stick 6000+ level classes at the end
+		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
 		for (let key in this.nodeDict) {
 			let curNode = this.nodeDict[key];
 			if (curNode.containedNodeIds != null) {
@@ -212,8 +212,10 @@ export class GraphComponent implements OnInit {
 				}
 				this.layoutFromNode(curNode,farthestColumn);
 			}
-			else if (+curNode.attr("id")[5] >= 6) {
-				this.setColNum(curNode,this.columnList.length-1,true);
+			else if (+curNode.attr("id")[5] >= 4) {
+				if (this.edgeDict[curNode.attr("id")] == undefined || this.edgeDict[curNode.attr("id")].length == 0) {
+					this.setColNum(curNode,this.columnList.length-1,true);
+				}
 			}
 		}
 	}
