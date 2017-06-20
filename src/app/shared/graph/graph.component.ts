@@ -11,8 +11,8 @@ import * as d3 from 'd3';
 
 @Component({
 	selector: 'app-graph',
-	templateUrl: './graph.component.html',
-	styleUrls: ['./graph.component.scss']
+	templateUrl: 'graph.component.html',
+	styleUrls: ['graph.component.scss']
 	 /*styles: [`
     .noselect {
     -webkit-touch-callout: none;
@@ -31,7 +31,7 @@ export class GraphComponent implements OnInit {
 	@ViewChild('graph') private graphContainer: ElementRef;
 	//private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
 	private nodeRadius: number;
-	private colors: any;
+	private colors: string;
 	private strokeThickness: number;
 	private edgeThickness: number;
 	private nodeSpacing: number;
@@ -150,7 +150,7 @@ export class GraphComponent implements OnInit {
 	/*load in graph data from prereq file (hosted by data service)*/
 	loadGraphData() {
 		let baseThis = this;
-		d3.json("http://localhost:3100/CSCI", function(prereqs) {
+		d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 
@@ -301,7 +301,6 @@ export class GraphComponent implements OnInit {
 			.attr("text-anchor", "middle")
 			.attr("alignment-baseline", "central")
 			.text(cuid);
-		console.log(circleText.classed('noselect'));
 			
 
 		this.nodeDict[cuid] = circle;
