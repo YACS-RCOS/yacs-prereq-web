@@ -13,16 +13,6 @@ import * as d3 from 'd3';
 	selector: 'app-graph',
 	templateUrl: './graph.component.html',
 	styleUrls: ['./graph.component.scss']
-	 /*styles: [`
-    .noselect {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-	}
-  `]*/
 })
 
 export class GraphComponent implements OnInit {
@@ -50,7 +40,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.vis = d3.select("#graph").append("svg:svg")
+		this.vis = d3.select(this.graphContainer.nativeElement).append('svg')
 		        .attr("class", "panel")
 		        .attr("width", 800)
 		        .attr("height", 600);
@@ -81,12 +71,12 @@ export class GraphComponent implements OnInit {
 		    .attr("y2", function(d) { return d.target.y; });
 			     
 		  baseThis.vis.selectAll('text.aEnd')
-		    .attr('x', function(d) { return this.xpos(d.source, d.target); })
-		    .attr('y', function(d) { return this.ypos(d.source, d.target); });
+		    .attr('x', function(d) { return baseThis.xpos(d.source, d.target); })
+		    .attr('y', function(d) { return baseThis.ypos(d.source, d.target); });
 			     
 		  baseThis.vis.selectAll('text.zEnd')
-		    .attr('x', function(d) { return this.xpos(d.target, d.source); })
-		    .attr('y', function(d) { return this.ypos(d.target, d.source); });
+		    .attr('x', function(d) { return baseThis.xpos(d.target, d.source); })
+		    .attr('y', function(d) { return baseThis.ypos(d.target, d.source); });
 		});
 		  
 		this.restart();
