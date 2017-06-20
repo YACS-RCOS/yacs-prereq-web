@@ -54,12 +54,12 @@ export class GraphComponent implements OnInit {
 		        .attr("class", "panel")
 		        .attr("width", 800)
 		        .attr("height", 600);
-
 		this.loadGraphData();
 	}
 
 	/*create the main graph svg and load in the course data*/
 	createGraph() {
+		let baseThis = this;
 		this.forceGraph = d3.forceSimulation()
 				.force("link", d3.forceLink())//.id(function(d) { return d.index }))
 		      	//.gravity(.05)
@@ -69,23 +69,22 @@ export class GraphComponent implements OnInit {
 		        .nodes(this.nodes);
 		        //.size([800, 600]);
 		this.forceGraph.force("link").links(this.edges)
-
 		this.forceGraph.on("tick", function(e) {
-		  this.vis.selectAll("circle")
+		  baseThis.vis.selectAll("circle")
 		    .attr("cx", function(d) { return d.x; })
 		    .attr("cy", function(d) { return d.y; });
 			  
-		  this.vis.selectAll("line")
+		  baseThis.vis.selectAll("line")
 		    .attr("x1", function(d) { return d.source.x; })
 		    .attr("y1", function(d) { return d.source.y; })
 		    .attr("x2", function(d) { return d.target.x; })
 		    .attr("y2", function(d) { return d.target.y; });
 			     
-		  this.vis.selectAll('text.aEnd')
+		  baseThis.vis.selectAll('text.aEnd')
 		    .attr('x', function(d) { return this.xpos(d.source, d.target); })
 		    .attr('y', function(d) { return this.ypos(d.source, d.target); });
 			     
-		  this.vis.selectAll('text.zEnd')
+		  baseThis.vis.selectAll('text.zEnd')
 		    .attr('x', function(d) { return this.xpos(d.target, d.source); })
 		    .attr('y', function(d) { return this.ypos(d.target, d.source); });
 		});
@@ -144,7 +143,7 @@ export class GraphComponent implements OnInit {
 	    let node = this.vis.selectAll("circle")
 	      .data(this.nodes).enter()
 	      .append("svg:circle")
-	      .call(this.forceGraph.drag)
+	      //.call(this.forceGraph.drag)
 	      .attr("class", "node")
 	      .attr("r", 10)
 	      .attr("cx", function(d) { return d.x; })
