@@ -33,9 +33,9 @@ export class GraphComponent implements OnInit {
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//list of d3 nodes
-	private nodes : any;
+	private nodes : any = [];
 	//list of d3 links
-	private edges : any;
+	private edges : any = [];
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
 	//reference to graph base svg
@@ -50,27 +50,27 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.createGraph();
-	}
-
-	/*create the main graph svg and load in the course data*/
-	createGraph() {
 		this.vis = d3.select("#graph").append("svg:svg")
 		        .attr("class", "panel")
 		        .attr("width", 800)
 		        .attr("height", 600);
 
 		this.loadGraphData();
+	}
 
-		this.forceGraph = d3.layout.force()
-		      .gravity(.05)
-		        .charge(-400)
-		        .distance(150)
-		        .nodes(this.nodes)
-		        .links(this.edges)
-		        .size([800, 600]);
+	/*create the main graph svg and load in the course data*/
+	createGraph() {
+		this.forceGraph = d3.forceSimulation()
+				.force("link", d3.forceLink())//.id(function(d) { return d.index }))
+		      	//.gravity(.05)
+		        //.charge(-400)
+		        .force("charge",d3.forceManyBody())
+		        //.distance(150)
+		        .nodes(this.nodes);
+		        //.size([800, 600]);
+		this.forceGraph.force("link").links(this.edges)
 
-		forceGraph.on("tick", function(e) {
+		this.forceGraph.on("tick", function(e) {
 		  this.vis.selectAll("circle")
 		    .attr("cx", function(d) { return d.x; })
 		    .attr("cy", function(d) { return d.y; });
@@ -95,47 +95,46 @@ export class GraphComponent implements OnInit {
 
 	/*load in graph data from prereq file (hosted by data service)*/
 	loadGraphData() {
-		let nodeData : any;
-		let metaNodeData : any;
 		let baseThis = this;
 		d3.json("http://localhost:3100/CSCI", function(prereqs) {
-			nodeData = prereqs["CSCI_nodes"];
-			metaNodeData = prereqs["meta_nodes"];
+			let nodeData = prereqs["CSCI_nodes"];
+			let metaNodeData = prereqs["meta_nodes"];
+			//first construct meta-nodes as standard nodes depend on their existence for edge creation
+			for (let metaNode of metaNodeData) {
+				baseThis.addNode(metaNode.meta_uid, metaNode.contains);
+			}
+
+			//construct graph nodes
+			for (let node of nodeData) {
+				let circle = baseThis.addNode(node.course_uid,null);
+
+				//construct edges based off of this node's prereqs and coreqs
+				for (let edge of node.prereq_formula) {
+					baseThis.addEdge(circle,baseThis.nodeDict[edge],"prereq");
+				}
+				for (let edge of node.coreq_formula) {
+					baseThis.addEdge(circle,baseThis.nodeDict[edge],"coreq");
+				}
+			}
+
+			//create our graph once the data has been loaded
+			baseThis.createGraph();
 		});
-		//first construct meta-nodes as standard nodes depend on their existence for edge creation
-		for (let metaNode of metaNodeData) {
-			baseThis.addNode(metaNode.meta_uid, metaNode.contains);
-		}
-
-		//construct graph nodes
-		for (let node of nodeData) {
-			let circle = baseThis.addNode(node.course_uid,null);
-
-			//construct edges based off of this node's prereqs and coreqs
-			for (let edge of node.prereq_formula) {
-				baseThis.addEdge(circle,baseThis.nodeDict[edge],"prereq");
-			}
-			for (let edge of node.coreq_formula) {
-				baseThis.addEdge(circle,baseThis.nodeDict[edge],"coreq");
-			}
-		}
 	}
 
 	addNode(id:string, contains:any) {
-		this.nodes.append({"id" : id});
+		this.nodes.push({"id" : id});
 		this.nodeDict[id] = this.nodes[this.nodes.length - 1];
 		return this.nodeDict[id];
 	}
 
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			this.edges.append({"source" : this.nodes.indexOf(startNode),"target" : this.nodes.indexOf(endNode)});
+			this.edges.push({"source" : this.nodes.indexOf(startNode),"target" : this.nodes.indexOf(endNode)});
 		}
 	}
 
-	restart() {
-	    this.forceGraph.start();
-	    
+	restart() {	    
 	    let link = this.vis.selectAll("line")
 	      .data(this.edges).enter()
 	      .insert("svg:g", "circle") // insert before the nodes
