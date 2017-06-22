@@ -5,11 +5,11 @@ nav#headerbar {
     height:50px;
     position:fixed;
     z-index: 1;
-    font-family: $font;    
+    font-family: $font;  
+    font-weight: 300;  
     background-color: $yacs_bgs;
     white-space: nowrap;
 }
-
 
 table#navtable {
     width:100%;
@@ -24,17 +24,14 @@ table#navtable {
 .sidelink {
     width:160px;
     cursor:pointer;
-    font-weight: 100;
     a {
-        color: $yacs_titles;
-        font-weight: 100;
+        color: #FFFFFF;
         text-decoration:none;
     } 
 }
 
 #page-title {
     font-size: 35px;
-    font-weight: 300;
     span.sub{
         font-size:16px;
     }
@@ -44,10 +41,9 @@ table#navtable {
     margin:auto;
 }
 
-
-
 #searchcontainer {
-    font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-family: $font;
+    font-weight: 300;
     font-size: 18px;
     color: white;
     background-color: #d57f7f;
@@ -59,12 +55,10 @@ table#navtable {
 }
 
 #searchbar {
-    /* font needs to be specified again for some reason, I think it's
-       something to do with the input tag? */
-    font-family: inherit;
+    font-family: $font;
+    font-weight: 300;
     font-size: 18px;
     max-width: 20em;
-    font-weight: 100;
     border: none;
     width: 100%;
     background-color: inherit;
