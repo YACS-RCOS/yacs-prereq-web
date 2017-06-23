@@ -113,11 +113,9 @@ export class GraphComponent implements OnInit {
 					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"coreq");
 				}
 			}
-
-			console.log(baseThis.graph);
-
 			//create our graph once the data has been loaded
 			//baseThis.createGraph();
+			baseThis.render(baseThis.graph);
 		});
 	}
 
@@ -168,7 +166,6 @@ export class GraphComponent implements OnInit {
         .force("center", d3.forceCenter(width / 2, height / 2));
     
     this.loadGraphData();
-    this.render(this.graph);
   }
   
   ticked() {
@@ -212,6 +209,7 @@ export class GraphComponent implements OnInit {
 
     this.forceGraph.force("link")
       .links(graph.links);  
+    console.log(graph);
   }
   
   dragged(d) {
