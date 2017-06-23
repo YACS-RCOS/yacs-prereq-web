@@ -3,6 +3,7 @@ import {
 	OnInit,
 	OnChanges,
 	ViewChild,
+	AfterViewInit,
 	ElementRef,
 	Input,
 	ViewEncapsulation
@@ -29,7 +30,11 @@ export class GraphComponent implements OnInit {
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
 	//reference to graph base svg
-	private vis : any;
+	private svg : any;
+
+	private color : any;
+	private link : any;
+	private node : any;
 	//list of lists, where each list contains the order in which nodes appear in the column corresponding to the list #
 	private columnList : any = [];
 
@@ -40,18 +45,18 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.vis = d3.select(this.graphContainer.nativeElement).append('svg')
+		this.svg = d3.select(this.graphContainer.nativeElement).append('svg')
 		        .attr("class", "panel")
 		        .attr("width", 800)
 		        .attr("height", 600);
-		this.loadGraphData();
+		//this.loadGraphData();
 	}
 
 	/*create the main graph svg and load in the course data*/
-	createGraph() {
+	/*createGraph() {
 		let baseThis = this;
 		this.forceGraph = d3.forceSimulation()
-				.force("link", d3.forceLink())//.id(function(d) { return d.index }))
+				.force("link", d3.forceLink().id(function(d:any) { return d.index; }))
 		      	//.gravity(.05)
 		        //.charge(-400)
 		        .force("charge",d3.forceManyBody())
@@ -60,27 +65,27 @@ export class GraphComponent implements OnInit {
 		        //.size([800, 600]);
 		this.forceGraph.force("link").links(this.edges)
 		this.forceGraph.on("tick", function(e) {
-		  baseThis.vis.selectAll("circle")
+		  baseThis.svg.selectAll("circle")
 		    .attr("cx", function(d) { return d.x; })
 		    .attr("cy", function(d) { return d.y; });
 			  
-		  baseThis.vis.selectAll("line")
+		  baseThis.svg.selectAll("line")
 		    .attr("x1", function(d) { return d.source.x; })
 		    .attr("y1", function(d) { return d.source.y; })
 		    .attr("x2", function(d) { return d.target.x; })
 		    .attr("y2", function(d) { return d.target.y; });
 			     
-		  baseThis.vis.selectAll('text.aEnd')
+		  baseThis.svg.selectAll('text.aEnd')
 		    .attr('x', function(d) { return baseThis.xpos(d.source, d.target); })
 		    .attr('y', function(d) { return baseThis.ypos(d.source, d.target); });
 			     
-		  baseThis.vis.selectAll('text.zEnd')
+		  baseThis.svg.selectAll('text.zEnd')
 		    .attr('x', function(d) { return baseThis.xpos(d.target, d.source); })
 		    .attr('y', function(d) { return baseThis.ypos(d.target, d.source); });
 		});
 		  
 		this.restart();
-	}
+	}*/
 
 	/*load in graph data from prereq file (hosted by data service)*/
 	loadGraphData() {
@@ -107,7 +112,7 @@ export class GraphComponent implements OnInit {
 			}
 
 			//create our graph once the data has been loaded
-			baseThis.createGraph();
+			//baseThis.createGraph();
 		});
 	}
 
@@ -123,14 +128,14 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	restart() {	    
-	    let link = this.vis.selectAll("line")
+	/*restart() {	    
+	    let link = this.svg.selectAll("line")
 	      .data(this.edges).enter()
 	      .insert("svg:g", "circle") // insert before the nodes
 	      .attr('class', 'link');
 	    this.addLink(link);
 
-	    let node = this.vis.selectAll("circle")
+	    let node = this.svg.selectAll("circle")
 	      .data(this.nodes).enter()
 	      .append("svg:circle")
 	      //.call(this.forceGraph.drag)
@@ -138,45 +143,86 @@ export class GraphComponent implements OnInit {
 	      .attr("r", 10)
 	      .attr("cx", function(d) { return d.x; })
 	      .attr("cy", function(d) { return d.y; });   
-	}
-	  
-	xpos(s, t) {
-	  var angle = Math.atan2(t.y - s.y, t.x - s.x);
-	  return 30 * Math.cos(angle) + s.x;
-	};
+	}*/
+  
+  ngAfterViewInit(){
+    this.svg = d3.select("svg");
+    
+    var width = +this.svg.attr("width");
+    var height = +this.svg.attr("height");
 
-	ypos(s, t) {
-	  var angle = Math.atan2(t.y - s.y, t.x - s.x);
-	  return 30 * Math.sin(angle) + s.y;
-	};
+    this.color = d3.scaleOrdinal(d3.schemeCategory20);
+    
+    this.forceGraph = d3.forceSimulation()
+        .force("link", d3.forceLink()//.id(function (d:{ id: string}) {
+        //return d.id
+      //}))
+      )
+        .force("charge", d3.forceManyBody())
+        .force("center", d3.forceCenter(width / 2, height / 2));
+    
+    this.loadGraphData();
+    this.render();
+  }
+  
+  ticked() {
+    this.link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
 
-	addLink(l) {
-	  l.append('svg:line')
-	  .attr("class", "outline")
-	  .attr("x1", function(d) { return d.source.x; })
-	  .attr("y1", function(d) { return d.source.y; })
-	  .attr("x2", function(d) { return d.target.x; })
-	  .attr("y2", function(d) { return d.target.y; });
-	  
-	  l.append('svg:line')
-	  .attr("class", function(d) { return d.type; })
-	  .attr("x1", function(d) { return d.source.x; })
-	  .attr("y1", function(d) { return d.source.y; })
-	  .attr("x2", function(d) { return d.target.x; })
-	  .attr("y2", function(d) { return d.target.y; });
-	  
-	  l.append('svg:text')
-	  .attr('class', 'aEnd')
-	  .attr('x', function(d) { return d.source.x; })
-	  .attr('y', function(d) { return d.source.y; })
-	  .attr('text-anchor', 'middle')
-	  .text(function(d) { return d.a; });
+    this.node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
+  
+  render(){
+  	let baseThis = this;
+    this.link = this.svg.append("g")
+    .attr("class", "links")
+    .selectAll("line")
+    .data(baseThis.edges)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-	  l.append('svg:text')
-	  .attr('class', 'zEnd')
-	  .attr('x', function(d) { return d.target.x; })
-	  .attr('y', function(d) { return d.target.y; })
-	  .attr('text-anchor', 'middle')
-	  .text(function(d) { return d.z; });
-	}
+    this.node = this.svg.append("g")
+    .attr("class", "nodes")
+    .selectAll("circle")
+    .data(baseThis.nodes)
+    .enter().append("circle")
+      .attr("r", 5)
+      .attr("fill", (d)=> { return this.color(d.group); })
+      .call(d3.drag()
+          .on("start", (d)=>{return this.dragstarted(d)})
+          .on("drag", (d)=>{return this.dragged(d)})
+          .on("end", (d)=>{return this.dragended(d)}));
+
+    this.node.append("title")
+      //.text(function(d) { return d.id; });
+
+    this.forceGraph
+      .nodes(baseThis.nodes)
+      .on("tick", ()=>{return this.ticked()});
+
+    this.forceGraph.force("link")
+      .links(baseThis.edges);  
+  }
+  
+  dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+  
+  dragended(d) {
+    if (!d3.event.active) this.forceGraph.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+  
+  dragstarted(d) {
+    if (!d3.event.active) this.forceGraph.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
 }
