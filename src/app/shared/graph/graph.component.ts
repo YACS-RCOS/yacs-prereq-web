@@ -12,8 +12,8 @@ import * as d3 from 'd3';
 
 @Component({
 	selector: 'app-graph',
-	templateUrl: './graph.component.html',
-	styleUrls: ['./graph.component.scss']
+	templateUrl: 'graph.component.html',
+	styleUrls: ['graph.component.scss']
 })
 
 export class GraphComponent implements OnInit {
@@ -92,7 +92,7 @@ export class GraphComponent implements OnInit {
 	/*load in graph data from prereq file (hosted by data service)*/
 	loadGraphData() {
 		let baseThis = this;
-		d3.json("http://localhost:3100/CSCI", function(prereqs) {
+		d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
 			//first construct meta-nodes as standard nodes depend on their existence for edge creation

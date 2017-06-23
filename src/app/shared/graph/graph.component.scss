@@ -13,42 +13,30 @@
 }
 
 .noselect {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 
-//css from http://bl.ocks.org/donaldh/2926502
 .node {
-  fill: #88f;
-  stroke: #44a;
-  stroke-width: 1px;
-}
-.aEnd,
-.zEnd {
-  fill: #444;
-  font-family: helvetica;
-  font-size: 8pt;
-}
-.default {
-  stroke: #fbb;
-  stroke-width: 4px;
-}
-.outline {
-  stroke: #844;
-  stroke-width: 6px;
+  cursor: pointer;
+  & circle {
+	  fill: #fff;
+	  stroke: steelblue;
+	  stroke-width: 1.5px;
+  }
+  & text {
+  	font: 10px sans-serif;
+  }
+
 }
 
-//css from https://stackoverflow.com/questions/41870684/d3-js-force-graph-with-type-script-and-angular2
-.links line {
-  stroke: #999;
-  stroke-opacity: 0.6;
-}
-
-.nodes circle {
-  stroke: #fff;
+.link {
+  fill: none;
+  stroke: #ccc;
   stroke-width: 1.5px;
 }
