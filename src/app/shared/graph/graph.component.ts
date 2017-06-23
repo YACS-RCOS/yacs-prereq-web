@@ -24,14 +24,16 @@ export class GraphComponent implements OnInit {
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//list of d3 nodes
-	private nodes : any = [];
+	//private nodes : any = [];
 	//list of d3 links
-	private edges : any = [];
+	//private edges : any = [];
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
 	//reference to graph base svg
 	private svg : any;
 
+	private graph : any = {nodes:[],edges:[]};
+	
 	private color : any;
 	private link : any;
 	private node : any;
@@ -61,9 +63,9 @@ export class GraphComponent implements OnInit {
 		        //.charge(-400)
 		        .force("charge",d3.forceManyBody())
 		        //.distance(150)
-		        .nodes(this.nodes);
+		        .graph.nodes(this.graph.nodes);
 		        //.size([800, 600]);
-		this.forceGraph.force("link").links(this.edges)
+		this.forceGraph.force("link").links(this.graph.edges)
 		this.forceGraph.on("tick", function(e) {
 		  baseThis.svg.selectAll("circle")
 		    .attr("cx", function(d) { return d.x; })
@@ -101,13 +103,14 @@ export class GraphComponent implements OnInit {
 			//construct graph nodes
 			for (let node of nodeData) {
 				let circle = baseThis.addNode(node.course_uid,null);
-
+			}
+			for (let node of nodeData) {
 				//construct edges based off of this node's prereqs and coreqs
 				for (let edge of node.prereq_formula) {
-					baseThis.addEdge(circle,baseThis.nodeDict[edge],"prereq");
+					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"prereq");
 				}
 				for (let edge of node.coreq_formula) {
-					baseThis.addEdge(circle,baseThis.nodeDict[edge],"coreq");
+					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"coreq");
 				}
 			}
 
@@ -117,26 +120,27 @@ export class GraphComponent implements OnInit {
 	}
 
 	addNode(id:string, contains:any) {
-		this.nodes.push({"id" : id});
-		this.nodeDict[id] = this.nodes[this.nodes.length - 1];
+		this.graph.nodes.push({"id" : id});
+		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		return this.nodeDict[id];
 	}
 
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			this.edges.push({"source" : this.nodes.indexOf(startNode),"target" : this.nodes.indexOf(endNode)});
+			this.graph.edges.push({"source" : this.graph.nodes.indexOf(startNode),"target" : this.graph.nodes.indexOf(endNode)});
+			//this.graph.edges.push({"source" : startNode.id,"target" : endNode.id});
 		}
 	}
 
 	/*restart() {	    
 	    let link = this.svg.selectAll("line")
-	      .data(this.edges).enter()
+	      .data(this.graph.edges).enter()
 	      .insert("svg:g", "circle") // insert before the nodes
 	      .attr('class', 'link');
 	    this.addLink(link);
 
 	    let node = this.svg.selectAll("circle")
-	      .data(this.nodes).enter()
+	      .data(this.graph.nodes).enter()
 	      .append("svg:circle")
 	      //.call(this.forceGraph.drag)
 	      .attr("class", "node")
@@ -154,10 +158,10 @@ export class GraphComponent implements OnInit {
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
     
     this.forceGraph = d3.forceSimulation()
-        .force("link", d3.forceLink()//.id(function (d:{ id: string}) {
-        //return d.id
-      //}))
-      )
+        .force("link", d3.forceLink().id(function (d:{ id: string}) {
+        return d.id
+      }))
+      
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2));
     
@@ -182,14 +186,14 @@ export class GraphComponent implements OnInit {
     this.link = this.svg.append("g")
     .attr("class", "links")
     .selectAll("line")
-    .data(baseThis.edges)
+    .data(baseThis.graph.edges)
     .enter().append("line")
       .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
     this.node = this.svg.append("g")
     .attr("class", "nodes")
     .selectAll("circle")
-    .data(baseThis.nodes)
+    .data(baseThis.graph.nodes)
     .enter().append("circle")
       .attr("r", 5)
       .attr("fill", (d)=> { return this.color(d.group); })
@@ -199,14 +203,14 @@ export class GraphComponent implements OnInit {
           .on("end", (d)=>{return this.dragended(d)}));
 
     this.node.append("title")
-      //.text(function(d) { return d.id; });
+      	.text(function(d) { return d.id; });
 
     this.forceGraph
-      .nodes(baseThis.nodes)
+      .nodes(baseThis.graph.nodes)
       .on("tick", ()=>{return this.ticked()});
 
     this.forceGraph.force("link")
-      .links(baseThis.edges);  
+      .links(baseThis.graph.edges);  
   }
   
   dragged(d) {
