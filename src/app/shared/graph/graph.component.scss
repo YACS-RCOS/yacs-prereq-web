@@ -20,3 +20,35 @@
     -ms-user-select: none;
     user-select: none;
 }
+
+//css from http://bl.ocks.org/donaldh/2926502
+.node {
+  fill: #88f;
+  stroke: #44a;
+  stroke-width: 1px;
+}
+.aEnd,
+.zEnd {
+  fill: #444;
+  font-family: helvetica;
+  font-size: 8pt;
+}
+.default {
+  stroke: #fbb;
+  stroke-width: 4px;
+}
+.outline {
+  stroke: #844;
+  stroke-width: 6px;
+}
+
+//css from https://stackoverflow.com/questions/41870684/d3-js-force-graph-with-type-script-and-angular2
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
