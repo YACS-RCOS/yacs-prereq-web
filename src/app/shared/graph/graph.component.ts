@@ -27,6 +27,9 @@ export class GraphComponent implements OnInit {
 	//private nodes : any = [];
 	//list of d3 links
 	//private edges : any = [];
+	private nodeRadius : number = 10;
+	private svgWidth : number = 800;
+	private svgHeight : number = 600;
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
 	//reference to graph base svg
@@ -47,10 +50,11 @@ export class GraphComponent implements OnInit {
 	}
 
 	ngOnInit() {
+		let baseThis = this;
 		this.svg = d3.select(this.graphContainer.nativeElement).append('svg')
 		        .attr("class", "panel")
-		        .attr("width", 800)
-		        .attr("height", 600);
+		        .attr("width", baseThis.svgWidth)
+		        .attr("height", baseThis.svgHeight);
 	}
 
 	/*load in graph data from prereq file (hosted by data service)*/
@@ -113,6 +117,7 @@ export class GraphComponent implements OnInit {
   }
   
   ticked() {
+  	let baseThis = this;
     this.link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
@@ -120,11 +125,12 @@ export class GraphComponent implements OnInit {
         .attr("y2", function(d) { return d.target.y; });
 
     this.node
-        .attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
+        .attr("cx", function(d) { return d.x = Math.max(baseThis.nodeRadius, Math.min(baseThis.svgWidth - baseThis.nodeRadius, d.x)); })
+        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius, Math.min(baseThis.svgHeight - baseThis.nodeRadius, d.y)); });
   }
   
   render(graph){
+  	let baseThis = this;
     this.link = this.svg.append("g")
     .attr("class", "links")
     .selectAll("line")
@@ -137,7 +143,7 @@ export class GraphComponent implements OnInit {
     .selectAll("circle")
     .data(graph.nodes)
     .enter().append("circle")
-      .attr("r", 10)
+      .attr("r", baseThis.nodeRadius)
       .attr("fill", (d)=> { return this.color(d.group); })
       .attr("stroke","blue")
       .call(d3.drag()
