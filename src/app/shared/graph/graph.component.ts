@@ -139,7 +139,8 @@ export class GraphComponent implements OnInit {
     .selectAll("line")
     .data(graph.links)
     .enter().append("line")
-      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+      .attr("stroke-width", function(d) { return 2; })
+      .attr("stroke","green");
 
     this.node = this.svg.append("g")
     .attr("class", "nodes")
