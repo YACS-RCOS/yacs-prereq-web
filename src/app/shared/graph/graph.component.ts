@@ -77,8 +77,6 @@ export class GraphComponent implements OnInit {
 					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"coreq");
 				}
 			}
-			//create our graph once the data has been loaded
-			//baseThis.createGraph();
 			baseThis.render(baseThis.graph);
 		});
 	}
@@ -139,8 +137,9 @@ export class GraphComponent implements OnInit {
     .selectAll("circle")
     .data(graph.nodes)
     .enter().append("circle")
-      .attr("r", 5)
+      .attr("r", 10)
       .attr("fill", (d)=> { return this.color(d.group); })
+      .attr("stroke","blue")
       .call(d3.drag()
           .on("start", (d)=>{return this.dragstarted(d)})
           .on("drag", (d)=>{return this.dragged(d)})
