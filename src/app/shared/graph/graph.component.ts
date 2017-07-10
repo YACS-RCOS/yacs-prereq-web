@@ -51,43 +51,7 @@ export class GraphComponent implements OnInit {
 		        .attr("class", "panel")
 		        .attr("width", 800)
 		        .attr("height", 600);
-		//this.loadGraphData();
 	}
-
-	/*create the main graph svg and load in the course data*/
-	/*createGraph() {
-		let baseThis = this;
-		this.forceGraph = d3.forceSimulation()
-				.force("link", d3.forceLink().id(function(d:any) { return d.index; }))
-		      	//.gravity(.05)
-		        //.charge(-400)
-		        .force("charge",d3.forceManyBody())
-		        //.distance(150)
-		        .graph.nodes(this.graph.nodes);
-		        //.size([800, 600]);
-		this.forceGraph.force("link").links(this.graph.links)
-		this.forceGraph.on("tick", function(e) {
-		  baseThis.svg.selectAll("circle")
-		    .attr("cx", function(d) { return d.x; })
-		    .attr("cy", function(d) { return d.y; });
-			  
-		  baseThis.svg.selectAll("line")
-		    .attr("x1", function(d) { return d.source.x; })
-		    .attr("y1", function(d) { return d.source.y; })
-		    .attr("x2", function(d) { return d.target.x; })
-		    .attr("y2", function(d) { return d.target.y; });
-			     
-		  baseThis.svg.selectAll('text.aEnd')
-		    .attr('x', function(d) { return baseThis.xpos(d.source, d.target); })
-		    .attr('y', function(d) { return baseThis.ypos(d.source, d.target); });
-			     
-		  baseThis.svg.selectAll('text.zEnd')
-		    .attr('x', function(d) { return baseThis.xpos(d.target, d.source); })
-		    .attr('y', function(d) { return baseThis.ypos(d.target, d.source); });
-		});
-		  
-		this.restart();
-	}*/
 
 	/*load in graph data from prereq file (hosted by data service)*/
 	loadGraphData() {
@@ -127,27 +91,9 @@ export class GraphComponent implements OnInit {
 
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			//this.graph.links.push({"source" : this.graph.nodes.indexOf(startNode),"target" : this.graph.nodes.indexOf(endNode)});
 			this.graph.links.push({"source" : startNode.id,"target" : endNode.id});
 		}
 	}
-
-	/*restart() {	    
-	    let link = this.svg.selectAll("line")
-	      .data(this.graph.links).enter()
-	      .insert("svg:g", "circle") // insert before the nodes
-	      .attr('class', 'link');
-	    this.addLink(link);
-
-	    let node = this.svg.selectAll("circle")
-	      .data(this.graph.nodes).enter()
-	      .append("svg:circle")
-	      //.call(this.forceGraph.drag)
-	      .attr("class", "node")
-	      .attr("r", 10)
-	      .attr("cx", function(d) { return d.x; })
-	      .attr("cy", function(d) { return d.y; });   
-	}*/
   
   ngAfterViewInit(){
     this.svg = d3.select("svg");
