@@ -27,9 +27,12 @@ export class GraphComponent implements OnInit {
 	//private nodes : any = [];
 	//list of d3 links
 	//private edges : any = [];
+
+	//svg attributes
 	private nodeRadius : number = 10;
 	private svgWidth : number = 800;
 	private svgHeight : number = 600;
+	private nodeStrokeWidth : number = 2;
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
 	//reference to graph base svg
@@ -125,8 +128,8 @@ export class GraphComponent implements OnInit {
         .attr("y2", function(d) { return d.target.y; });
 
     this.node
-        .attr("cx", function(d) { return d.x = Math.max(baseThis.nodeRadius, Math.min(baseThis.svgWidth - baseThis.nodeRadius, d.x)); })
-        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius, Math.min(baseThis.svgHeight - baseThis.nodeRadius, d.y)); });
+        .attr("cx", function(d) { return d.x = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); })
+        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
   }
   
   render(graph){
@@ -146,6 +149,7 @@ export class GraphComponent implements OnInit {
       .attr("r", baseThis.nodeRadius)
       .attr("fill", (d)=> { return this.color(d.group); })
       .attr("stroke","blue")
+      .attr("stroke-width",baseThis.nodeStrokeWidth)
       .call(d3.drag()
           .on("start", (d)=>{return this.dragstarted(d)})
           .on("drag", (d)=>{return this.dragged(d)})
