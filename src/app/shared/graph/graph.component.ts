@@ -23,18 +23,13 @@ export class GraphComponent implements OnInit {
 	//private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
-	//list of d3 nodes
-	//private nodes : any = [];
-	//list of d3 links
-	//private edges : any = [];
-
+	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
+	private edgeDict: any = {};
 	//svg attributes
 	private nodeRadius : number = 10;
 	private svgWidth : number = 800;
 	private svgHeight : number = 600;
 	private nodeStrokeWidth : number = 2;
-	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
-	private edgeDict: any = {};
 	//reference to graph base svg
 	private svg : any;
 
@@ -66,45 +61,130 @@ export class GraphComponent implements OnInit {
 		d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
 			let nodeData = prereqs["CSCI_nodes"];
 			let metaNodeData = prereqs["meta_nodes"];
+
 			//first construct meta-nodes as standard nodes depend on their existence for edge creation
 			for (let metaNode of metaNodeData) {
-				baseThis.addNode(metaNode.meta_uid, metaNode.contains);
+				let circle = baseThis.addNode(metaNode.meta_uid,metaNode.contains);
 			}
 
 			//construct graph nodes
 			for (let node of nodeData) {
 				let circle = baseThis.addNode(node.course_uid,null);
-			}
-			for (let node of nodeData) {
+
 				//construct edges based off of this node's prereqs and coreqs
+				let hasValidEdge = false;
 				for (let edge of node.prereq_formula) {
-					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"prereq");
+					hasValidEdge = baseThis.addEdge(circle,baseThis.nodeDict[edge],"prereq") || hasValidEdge;
 				}
 				for (let edge of node.coreq_formula) {
-					baseThis.addEdge(baseThis.nodeDict[node.course_uid],baseThis.nodeDict[edge],"coreq");
+					baseThis.addEdge(circle,baseThis.nodeDict[edge],"coreq");
+				}
+				//start at column 0 if we have no prereqs or our prereqs are not in the dataset
+				if (node.prereq_formula.length == 0 || !hasValidEdge) {
+					baseThis.setColNum(circle,0);
 				}
 			}
+
+			//layout standard nodes and edges
+			baseThis.layoutColumns();
 			baseThis.render(baseThis.graph);
 		});
 	}
 
-	addNode(id:string, contains:any) {
+	addNode(id:string, containedNodeIds:any) {
 		this.graph.nodes.push({"id" : id});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
+		this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
 		return this.nodeDict[id];
 	}
 
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
 			this.graph.links.push({"source" : startNode.id,"target" : endNode.id});
+
+			if (!this.edgeDict[startNode.id]) {
+				this.edgeDict[startNode.id] = [];
+			}
+			this.edgeDict[startNode.id].push(this.graph.links[this.graph.links-1]);
+			if (!this.edgeDict[endNode.id]) {
+				this.edgeDict[endNode.id] = [];
+			}
+			this.edgeDict[endNode.id].push(this.graph.links[this.graph.links-1]);
+		}
+	}
+
+	/*organize nodes into columns based on their prereqs*/
+	layoutColumns() {
+		//start by laying out nodes branching from first column (nodes with no dependencies)
+		for (let node of this.columnList[0]) {
+			this.layoutFromNode(node,0);			
+		}
+
+		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
+		for (let key in this.nodeDict) {
+			let curNode = this.nodeDict[key];
+			if (curNode.containedNodeIds != null) {
+				let farthestColumn = 0;
+				for (let i = 0; i < curNode.containedNodeIds.length; ++i) {
+					let curContainedNode = this.nodeDict[curNode.containedNodeIds[i]];
+					farthestColumn = Math.max(farthestColumn,curContainedNode? +curContainedNode.column : 0);
+				}
+				this.layoutFromNode(curNode,farthestColumn);
+			}
+			else if (+curNode.attr("id")[5] >= 4) {
+				if (this.edgeDict[curNode.attr("id")] == undefined || this.edgeDict[curNode.attr("id")].length == 0) {
+					this.setColNum(curNode,this.columnList.length-1,true);
+				}
+			}
+		}
+	}
+
+	/*layout nodes stemming from current node*/
+	layoutFromNode(node : any, colNum : number) {
+		if (+node.column != colNum) {
+			this.setColNum(node,colNum);
+		}
+		if (this.edgeDict[node.attr("id")]) {
+			for (let edge of this.edgeDict[node.attr("id")]) {
+				if (edge.attr("endNodeID") == node.attr("id")) {
+					this.layoutFromNode(this.nodeDict[edge.attr("startNodeID")],colNum+1);
+				}
+			}
+		}
+		
+	}
+
+	/*move Node node to column colNum*/
+	setColNum(node : any, colNum: number, allowColumnChange = false) {
+		if (colNum == node.column) {
+			return;
+		}
+		if (+node.column == -1 || allowColumnChange) {
+			//make sure we have enough columns
+			while (this.columnList.length < (colNum+1)) {
+				this.columnList.push([]);
+			}
+			if (+node.column != -1) {
+				//remove from current column
+				let oldColumn = this.columnList[+node.column];
+				let oldIndex = oldColumn.indexOf(node);
+				oldColumn.splice(oldIndex,1);
+				//reposition displaced nodes
+				for (let i = oldIndex; i <oldColumn.length; ++i) {
+					this.columnList[+node.column][i].attr("column",+node.column);
+					
+				}
+			}
+			
+			//add to new column
+			this.columnList[colNum].push(node);
+			this.columnList[colNum][this.columnList[colNum].length-1].attr("column",colNum);
 		}
 	}
   
   ngAfterViewInit(){
+  	let baseThis = this;
     this.svg = d3.select("svg");
-    
-    var width = +this.svg.attr("width");
-    var height = +this.svg.attr("height");
 
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
     
@@ -114,7 +194,7 @@ export class GraphComponent implements OnInit {
       }))
       
         .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
     
     this.loadGraphData();
   }
