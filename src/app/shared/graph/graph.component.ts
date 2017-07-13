@@ -101,23 +101,22 @@ export class GraphComponent implements OnInit {
 
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			this.graph.links.push({"source" : startNode.id,"target" : endNode.id});
+			this.graph.links.push({"source" : startNode.id,"target" : endNode.id, "startNodeID" : startNode.id, "endNodeID" : endNode.id});
 
 			if (!this.edgeDict[startNode.id]) {
 				this.edgeDict[startNode.id] = [];
 			}
-			this.edgeDict[startNode.id].push(this.graph.links[this.graph.links-1]);
+			this.edgeDict[startNode.id].push(this.graph.links[this.graph.links.length-1]);
 			if (!this.edgeDict[endNode.id]) {
 				this.edgeDict[endNode.id] = [];
 			}
-			this.edgeDict[endNode.id].push(this.graph.links[this.graph.links-1]);
+			this.edgeDict[endNode.id].push(this.graph.links[this.graph.links.length-1]);
 		}
 	}
 
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
-		console.log(this.columnList);
 		for (let node of this.columnList[0]) {
 			this.layoutFromNode(node,0);			
 		}
@@ -133,8 +132,8 @@ export class GraphComponent implements OnInit {
 				}
 				this.layoutFromNode(curNode,farthestColumn);
 			}
-			else if (+curNode.attr("id")[5] >= 4) {
-				if (this.edgeDict[curNode.attr("id")] == undefined || this.edgeDict[curNode.attr("id")].length == 0) {
+			else if (+curNode.id[5] >= 4) {
+				if (this.edgeDict[curNode.id] == undefined || this.edgeDict[curNode.id].length == 0) {
 					this.setColNum(curNode,this.columnList.length-1,true);
 				}
 			}
@@ -147,10 +146,9 @@ export class GraphComponent implements OnInit {
 			this.setColNum(node,colNum);
 		}
 		if (this.edgeDict[node.id]) {
-			console.log(this.edgeDict);
 			for (let edge of this.edgeDict[node.id]) {
 				if (edge.endNodeID == node.id) {
-					this.layoutFromNode(this.nodeDict[edge.attr("startNodeID")],colNum+1);
+					this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1);
 				}
 			}
 		}
@@ -174,7 +172,7 @@ export class GraphComponent implements OnInit {
 				oldColumn.splice(oldIndex,1);
 				//reposition displaced nodes
 				for (let i = oldIndex; i <oldColumn.length; ++i) {
-					this.columnList[+node.column][i].attr("column",+node.column);
+					this.columnList[+node.column][i].column = +node.column;
 					
 				}
 			}
