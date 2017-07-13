@@ -95,6 +95,7 @@ export class GraphComponent implements OnInit {
 		this.graph.nodes.push({"id" : id});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
+		this.graph.nodes[this.graph.nodes.length-1].column = -1;
 		return this.nodeDict[id];
 	}
 
@@ -116,6 +117,7 @@ export class GraphComponent implements OnInit {
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
+		console.log(this.columnList);
 		for (let node of this.columnList[0]) {
 			this.layoutFromNode(node,0);			
 		}
@@ -144,9 +146,10 @@ export class GraphComponent implements OnInit {
 		if (+node.column != colNum) {
 			this.setColNum(node,colNum);
 		}
-		if (this.edgeDict[node.attr("id")]) {
-			for (let edge of this.edgeDict[node.attr("id")]) {
-				if (edge.attr("endNodeID") == node.attr("id")) {
+		if (this.edgeDict[node.id]) {
+			console.log(this.edgeDict);
+			for (let edge of this.edgeDict[node.id]) {
+				if (edge.endNodeID == node.id) {
 					this.layoutFromNode(this.nodeDict[edge.attr("startNodeID")],colNum+1);
 				}
 			}
@@ -178,7 +181,7 @@ export class GraphComponent implements OnInit {
 			
 			//add to new column
 			this.columnList[colNum].push(node);
-			this.columnList[colNum][this.columnList[colNum].length-1].attr("column",colNum);
+			this.columnList[colNum][this.columnList[colNum].length-1].column = colNum;
 		}
 	}
   
