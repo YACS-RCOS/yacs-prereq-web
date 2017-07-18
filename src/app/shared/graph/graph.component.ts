@@ -118,7 +118,7 @@ export class GraphComponent implements OnInit {
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
 		for (let node of this.columnList[0]) {
-			this.layoutFromNode(node,0);			
+			this.layoutFromNode(node,0);		
 		}
 
 		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
@@ -179,7 +179,7 @@ export class GraphComponent implements OnInit {
 			
 			//add to new column
 			this.columnList[colNum].push(node);
-			this.columnList[colNum][this.columnList[colNum].length-1].column = colNum;
+			node.column = colNum;
 		}
 	}
   
@@ -209,7 +209,15 @@ export class GraphComponent implements OnInit {
         .attr("y2", function(d) { return d.target.y; });
 
     this.node
-        .attr("cx", function(d) { return d.x = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); })
+        .attr("cx", function(d) { 
+        	//keep x within svg bounds
+        	//let boundedX = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
+        	//keep x within column bounds
+        	let columnXMin = (+d.column)*100 + 10;
+        	let columnXMax = (+d.column)*100 + 90;
+        	return d.x = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth + columnXMin, Math.min(columnXMax - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
+
+        })
         .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
   }
   
