@@ -182,6 +182,14 @@ export class GraphComponent implements OnInit {
 			node.column = colNum;
 		}
 	}
+
+	/*move node into the nearest column (to be called upon drag end)*/
+	moveToNearestColumn(node : any) {
+		node.column = Math.floor((node.x-5)/100);
+		if (node.column < 0) {
+			node.column = 0;
+		}
+	}
   
   ngAfterViewInit(){
   	let baseThis = this;
@@ -271,6 +279,7 @@ export class GraphComponent implements OnInit {
     d.fx = null;
     d.fy = null;
     d.dragging = false;
+    this.moveToNearestColumn(d);
   }
   
   dragstarted(d) {
