@@ -212,10 +212,14 @@ export class GraphComponent implements OnInit {
         .attr("cx", function(d) { 
         	//keep x within svg bounds
         	//let boundedX = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
-        	//keep x within column bounds
-        	let columnXMin = (+d.column)*100 + 10;
-        	let columnXMax = (+d.column)*100 + 90;
-        	return d.x = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth + columnXMin, Math.min(columnXMax - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
+        	//keep x within column bounds, unless dragging
+        	if (d.dragging) {
+        		console.log("dragging");
+        	}
+        	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
+        	let columnXMin = d.dragging ? 0 : (+d.column)*100 + 10;
+        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*100 + 90;
+        	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
         })
         .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
@@ -266,11 +270,13 @@ export class GraphComponent implements OnInit {
     if (!d3.event.active) this.forceGraph.alphaTarget(0);
     d.fx = null;
     d.fy = null;
+    d.dragging = false;
   }
   
   dragstarted(d) {
     if (!d3.event.active) this.forceGraph.alphaTarget(0.3).restart();
     d.fx = d.x;
     d.fy = d.y;
+    d.dragging = true;
   }
 }
