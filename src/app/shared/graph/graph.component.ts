@@ -17,36 +17,42 @@ import * as d3 from 'd3';
 })
 
 export class GraphComponent implements OnInit {
-
 	@Input() private data: Array < any > ;
 	@ViewChild('graph') private graphContainer: ElementRef;
-	//private margin: any = { top: 20, bottom: 20, left: 20, right: 20};
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
 	private edgeDict: any = {};
-	//svg attributes
+	
+	//constants defining node visuals
 	private nodeRadius : number = 10;
+	private nodeStrokeWidth : number = 2;
+
+	//svg dimensions define the play area of our graph
 	private svgWidth : number = 800;
 	private svgHeight : number = 600;
-	private nodeStrokeWidth : number = 2;
+
 	//reference to graph base svg
 	private svg : any;
 
+	//our graph data structure consists of a list of nodes and a list of edges or 'links'
 	private graph : any = {nodes:[],links:[]};
 	
+	//our graph color is inherited from the d3 visual stype
 	private color : any;
-	private link : any;
+
+	//data structures handling graph nodes and links; defined below
 	private node : any;
-	//list of lists, where each list contains the order in which nodes appear in the column corresponding to the list #
+	private link : any;
+
+	//2d list, where each list contains the order in which nodes appear in the column corresponding to the list #
+	//note that when using a force directed graph, we ignore the node order as node re-positioning is allowed
 	private columnList : any = [];
 
+	//our force directed simulation; we need this reference when udpating the simulation as a whole
 	private forceGraph : any;
 
-	constructor() {
-
-	}
-
+	/*once ng is initialized, we setup our svg with the specified width and height constants*/
 	ngOnInit() {
 		let baseThis = this;
 		this.svg = d3.select(this.graphContainer.nativeElement).append('svg')
@@ -91,6 +97,7 @@ export class GraphComponent implements OnInit {
 		});
 	}
 
+	/*add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed*/
 	addNode(id:string, containedNodeIds:any) {
 		this.graph.nodes.push({"id" : id});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
@@ -99,6 +106,7 @@ export class GraphComponent implements OnInit {
 		return this.nodeDict[id];
 	}
 
+	/*add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node*/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
 			this.graph.links.push({"source" : startNode.id,"target" : endNode.id, "startNodeID" : startNode.id, "endNodeID" : endNode.id});
@@ -191,6 +199,7 @@ export class GraphComponent implements OnInit {
 		}
 	}
   
+  /*once the view has been initialized, we are ready to begin setting up our graph and loading in data*/
   ngAfterViewInit(){
   	let baseThis = this;
     this.svg = d3.select("svg");
@@ -208,25 +217,25 @@ export class GraphComponent implements OnInit {
     this.loadGraphData();
   }
   
+  /*graph update. Update node positions and constraints, followed by edge positions*/
   ticked() {
   	let baseThis = this;
 
   	this.node
         .attr("cx", function(d) { 
-        	//keep x within svg bounds
-        	//let boundedX = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
-        	//keep x within column bounds, unless dragging
-        	if (d.dragging) {
-        		console.log("dragging");
-        	}
+        	//keep x within column bounds and svg bounds, unless dragging
+        	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
         	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
         	let columnXMin = d.dragging ? 0 : (+d.column)*100 + 10;
         	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*100 + 90;
         	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
         })
-        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
-        
+        //keep y within svg bounds
+        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
+        	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+
+    //update links after nodes, in order to ensure that links do not lag behind node updates
     this.link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
@@ -235,6 +244,7 @@ export class GraphComponent implements OnInit {
 
   }
   
+  /*adds the graph to the page. This is the last step to bring up our force directed graph*/
   render(graph){
   	let baseThis = this;
     this.link = this.svg.append("g")
@@ -271,11 +281,13 @@ export class GraphComponent implements OnInit {
     console.log(graph);
   }
   
+  /*drag update*/
   dragged(d) {
     d.fx = d3.event.x;
     d.fy = d3.event.y;
   }
   
+  /*finished dragging; snap to the nearest column*/
   dragended(d) {
     if (!d3.event.active) this.forceGraph.alphaTarget(0);
     d.fx = null;
@@ -284,6 +296,7 @@ export class GraphComponent implements OnInit {
     this.moveToNearestColumn(d);
   }
   
+  /*started draggingl mark the drag node as being dragged*/
   dragstarted(d) {
     if (!d3.event.active) this.forceGraph.alphaTarget(0.3).restart();
     d.fx = d.x;
