@@ -210,13 +210,8 @@ export class GraphComponent implements OnInit {
   
   ticked() {
   	let baseThis = this;
-    this.link
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
 
-    this.node
+  	this.node
         .attr("cx", function(d) { 
         	//keep x within svg bounds
         	//let boundedX = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgWidth - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.x)); 
@@ -231,6 +226,13 @@ export class GraphComponent implements OnInit {
 
         })
         .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+        
+    this.link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
   }
   
   render(graph){
