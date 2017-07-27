@@ -198,7 +198,7 @@ export class GraphComponent implements OnInit {
 
 	/*move node into the nearest column (to be called upon drag end)*/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x-5)/this.colWidth);
+		node.column = Math.floor((node.x+this.colWidth/4)/this.colWidth);
 		if (node.column < 0) {
 			node.column = 0;
 		}
@@ -233,7 +233,7 @@ export class GraphComponent implements OnInit {
         	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
         	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
         	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
-        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*100 + 90;
+        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
         	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
         })
