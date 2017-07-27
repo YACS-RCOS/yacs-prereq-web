@@ -29,8 +29,11 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeWidth : number = 2;
 
 	//svg dimensions define the play area of our graph
-	private svgWidth : number = 800;
+	private svgWidth : number = 1600;
 	private svgHeight : number = 600;
+
+	//width of column contained area
+	private colWidth : number = 200;
 
 	//reference to graph base svg
 	private svg : any;
@@ -195,7 +198,7 @@ export class GraphComponent implements OnInit {
 
 	/*move node into the nearest column (to be called upon drag end)*/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x-5)/100);
+		node.column = Math.floor((node.x-5)/this.colWidth);
 		if (node.column < 0) {
 			node.column = 0;
 		}
@@ -213,7 +216,8 @@ export class GraphComponent implements OnInit {
         return d.id
       }))
       
-        .force("charge", d3.forceManyBody())
+        .force("attract", d3.forceManyBody().strength(.005).distanceMax(400).distanceMin(60))
+        .force("repel", d3.forceManyBody().strength(-150).distanceMax(50).distanceMin(10))
         .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
     
     this.loadGraphData();
@@ -228,7 +232,7 @@ export class GraphComponent implements OnInit {
         	//keep x within column bounds and svg bounds, unless dragging
         	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
         	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-        	let columnXMin = d.dragging ? 0 : (+d.column)*100 + 10;
+        	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
         	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*100 + 90;
         	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
