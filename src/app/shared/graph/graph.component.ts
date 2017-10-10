@@ -216,8 +216,8 @@ export class GraphComponent implements OnInit {
         return d.id
       }))
       
-        .force("attract", d3.forceManyBody().strength(.005).distanceMax(400).distanceMin(60))
-        .force("repel", d3.forceManyBody().strength(-150).distanceMax(50).distanceMin(10))
+        .force("attract", d3.forceManyBody().strength(.005).distanceMax(10000).distanceMin(60))
+        .force("repel", d3.forceManyBody().strength(-175).distanceMax(100).distanceMin(10))
         .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
     
     this.loadGraphData();
