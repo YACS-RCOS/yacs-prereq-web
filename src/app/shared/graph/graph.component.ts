@@ -29,8 +29,11 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeWidth : number = 2;
 
 	//svg dimensions define the play area of our graph
-	private svgWidth : number = 800;
+	private svgWidth : number = 1600;
 	private svgHeight : number = 600;
+
+	//width of column contained area
+	private colWidth : number = 200;
 
 	//reference to graph base svg
 	private svg : any;
@@ -109,7 +112,8 @@ export class GraphComponent implements OnInit {
 	/*add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node*/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			this.graph.links.push({"source" : startNode.id,"target" : endNode.id, "startNodeID" : startNode.id, "endNodeID" : endNode.id});
+			this.graph.links.push({"source" : startNode.id,"target" : endNode.id, 
+				"startNodeID" : startNode.id, "endNodeID" : endNode.id});
 
 			if (!this.edgeDict[startNode.id]) {
 				this.edgeDict[startNode.id] = [];
@@ -119,14 +123,16 @@ export class GraphComponent implements OnInit {
 				this.edgeDict[endNode.id] = [];
 			}
 			this.edgeDict[endNode.id].push(this.graph.links[this.graph.links.length-1]);
+			return true;
 		}
+		return false;
 	}
 
 	/*organize nodes into columns based on their prereqs*/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
 		for (let node of this.columnList[0]) {
-			this.layoutFromNode(node,0);		
+			this.layoutFromNode(node,0);	
 		}
 
 		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
@@ -150,7 +156,7 @@ export class GraphComponent implements OnInit {
 
 	/*layout nodes stemming from current node*/
 	layoutFromNode(node : any, colNum : number) {
-		if (+node.column != colNum) {
+		if (node.column != colNum) {
 			this.setColNum(node,colNum);
 		}
 		if (this.edgeDict[node.id]) {
@@ -158,9 +164,8 @@ export class GraphComponent implements OnInit {
 				if (edge.endNodeID == node.id) {
 					this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1);
 				}
-			}
-		}
-		
+			}	
+		}		
 	}
 
 	/*move Node node to column colNum*/
@@ -168,19 +173,19 @@ export class GraphComponent implements OnInit {
 		if (colNum == node.column) {
 			return;
 		}
-		if (+node.column == -1 || allowColumnChange) {
+		if (node.column == -1 || allowColumnChange) {
 			//make sure we have enough columns
 			while (this.columnList.length < (colNum+1)) {
 				this.columnList.push([]);
 			}
-			if (+node.column != -1) {
+			if (node.column != -1) {
 				//remove from current column
-				let oldColumn = this.columnList[+node.column];
+				let oldColumn = this.columnList[node.column];
 				let oldIndex = oldColumn.indexOf(node);
 				oldColumn.splice(oldIndex,1);
 				//reposition displaced nodes
 				for (let i = oldIndex; i <oldColumn.length; ++i) {
-					this.columnList[+node.column][i].column = +node.column;
+					this.columnList[node.column][i].column = node.column;
 					
 				}
 			}
@@ -193,7 +198,7 @@ export class GraphComponent implements OnInit {
 
 	/*move node into the nearest column (to be called upon drag end)*/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x-5)/100);
+		node.column = Math.floor((node.x+this.colWidth/4)/this.colWidth);
 		if (node.column < 0) {
 			node.column = 0;
 		}
@@ -211,7 +216,8 @@ export class GraphComponent implements OnInit {
         return d.id
       }))
       
-        .force("charge", d3.forceManyBody())
+        .force("attract", d3.forceManyBody().strength(.005).distanceMax(10000).distanceMin(60))
+        .force("repel", d3.forceManyBody().strength(-175).distanceMax(100).distanceMin(10))
         .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
     
     this.loadGraphData();
@@ -226,8 +232,8 @@ export class GraphComponent implements OnInit {
         	//keep x within column bounds and svg bounds, unless dragging
         	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
         	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-        	let columnXMin = d.dragging ? 0 : (+d.column)*100 + 10;
-        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*100 + 90;
+        	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
+        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
         	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
         })
