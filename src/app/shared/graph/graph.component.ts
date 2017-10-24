@@ -98,6 +98,8 @@ export class GraphComponent implements OnInit {
 
 			//layout standard nodes and edges
 			baseThis.layoutColumns();
+
+			//add the finalized graph
 			baseThis.render(baseThis.graph);
 		});
 	}
@@ -108,11 +110,43 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodeDict
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.graph.nodes.push({"id" : id});
+		this.graph.nodes.push({"id" : id, "active" : true});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
 		this.graph.nodes[this.graph.nodes.length-1].column = -1;
 		return this.nodeDict[id];
+	}
+
+	/**hide the specified node, removing it from the graph and setting it to inactive
+	@param id: the string id of the node to hide
+	**/
+	hideNode(id:string) {
+		//first find and remove the desired node
+		var curNode;
+		for (var i : number = 0; i < this.node._groups[0].length; ++i) {
+			curNode = this.node._groups[0][i];
+			var curTitle = curNode.childNodes[0].childNodes[0].data;
+			//make sure the ids are the same
+			if (curTitle == id) {
+				this.node._groups[0].splice(i,1);
+				break;
+			}
+		}
+		//now find and remove any edges that connect to the removed node
+		for (var i : number = 0; i < this.link._groups[0].length; ++i) {
+			var curLink : any = this.link._groups[0][i];
+			//make sure the locations are the same
+			if ( 
+				(curLink["x1"].animVal.value == curNode["cx"].animVal.value &&
+				curLink["y1"].animVal.value == curNode["cy"].animVal.value) 
+				|| 
+				(curLink["x2"].animVal.value == curNode["cx"].animVal.value &&
+				curLink["y2"].animVal.value == curNode["cy"].animVal.value)
+				) {
+				this.link._groups[0].splice(i,1);
+				console.log(i);
+			}
+		}
 	}
 
 	/**add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
@@ -340,5 +374,8 @@ export class GraphComponent implements OnInit {
 		d.fx = d.x;
 		d.fy = d.y;
 		d.dragging = true;
+
+		//test hideNode
+		this.hideNode("CSCI-4680");
 	}
 }
