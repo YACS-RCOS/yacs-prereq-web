@@ -129,6 +129,7 @@ export class GraphComponent implements OnInit {
 			//make sure the ids are the same
 			if (curTitle == id) {
 				this.node._groups[0].splice(i,1);
+				console.log("removing node: " + curTitle + " at index: " + i);
 				break;
 			}
 		}
@@ -136,17 +137,13 @@ export class GraphComponent implements OnInit {
 		for (var i : number = 0; i < this.link._groups[0].length; ++i) {
 			var curLink : any = this.link._groups[0][i];
 			//make sure the locations are the same
-			if ( 
-				(curLink["x1"].animVal.value == curNode["cx"].animVal.value &&
-				curLink["y1"].animVal.value == curNode["cy"].animVal.value) 
-				|| 
-				(curLink["x2"].animVal.value == curNode["cx"].animVal.value &&
-				curLink["y2"].animVal.value == curNode["cy"].animVal.value)
-				) {
+			if ((curLink["x1"].animVal.value == curNode["cx"].animVal.value && curLink["y1"].animVal.value == curNode["cy"].animVal.value) || 
+				(curLink["x2"].animVal.value == curNode["cx"].animVal.value && curLink["y2"].animVal.value == curNode["cy"].animVal.value)) {
 				this.link._groups[0].splice(i,1);
-				console.log(i);
+				console.log("removing edge: " + curLink + " at index: " + i);
 			}
 		}
+		this.nodeDict[id].active = false;
 	}
 
 	/**add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
@@ -347,6 +344,10 @@ export class GraphComponent implements OnInit {
 	@param d: the node being dragged
 	**/
 	dragged(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			return;
+		}
 		d.fx = d3.event.x;
 		d.fy = d3.event.y;
 	}
@@ -355,6 +356,10 @@ export class GraphComponent implements OnInit {
 	@param d: the node that we just finished dragging
 	**/
 	dragended(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			return;
+		}
 		if (!d3.event.active) {
 			this.forceGraph.alphaTarget(0);
 		}
@@ -368,6 +373,10 @@ export class GraphComponent implements OnInit {
 	@param d: the node that we just started dragging
 	**/
 	dragstarted(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			return;
+		}
 		if (!d3.event.active) {
 			this.forceGraph.alphaTarget(0.3).restart();
 		}
