@@ -1,6 +1,7 @@
-
-language: ruby
-rvm:
- - 2.4.2
- - jruby
- - rbx-2
+language: node_js
+node_js:
+	- '0.10'
+before_install:
+	- npm install 
+script:
+	- npm test
