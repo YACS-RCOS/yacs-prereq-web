@@ -226,7 +226,7 @@ export class GraphComponent implements OnInit {
   
 	/**once the view has been initialized, we are ready to begin setting up our graph and loading in data
 	**/
-	ngAfterViewInit(){
+	ngAfterViewInit() {
 		let baseThis = this;
 		this.svg = d3.select("svg");
 
@@ -250,63 +250,63 @@ export class GraphComponent implements OnInit {
 		let baseThis = this;
 
 		this.node
-	    .attr("cx", function(d) { 
-	    	//keep x within column bounds and svg bounds, unless dragging
-	    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
-	    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-	    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
-	    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
-	    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+		    .attr("cx", function(d) { 
+		    	//keep x within column bounds and svg bounds, unless dragging
+		    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
+		    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
+		    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
+		    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
+		    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
 
-	    })
-	    //keep y within svg bounds
-	    .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
-	    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+		    })
+		    //keep y within svg bounds
+		    .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
+		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
 
-	//update links after nodes, in order to ensure that links do not lag behind node updates
-	this.link
-	    .attr("x1", function(d) { return d.source.x; })
-	    .attr("y1", function(d) { return d.source.y; })
-	    .attr("x2", function(d) { return d.target.x; })
-	    .attr("y2", function(d) { return d.target.y; });
+		//update links after nodes, in order to ensure that links do not lag behind node updates
+		this.link
+		    .attr("x1", function(d) { return d.source.x; })
+		    .attr("y1", function(d) { return d.source.y; })
+		    .attr("x2", function(d) { return d.target.x; })
+		    .attr("y2", function(d) { return d.target.y; });
 	}
   
 	/**adds the graph to the page. This is the last step to bring up our force directed graph
 	@param graph: the graph element to add to the page
 	**/
-	render(graph : any){
+	render(graph : any) {
 		let baseThis = this;
-	this.link = this.svg.append("g")
-	.attr("class", "links")
-	.selectAll("line")
-	.data(graph.links)
-	.enter().append("line")
-	  .attr("stroke-width", function(d) { return 2; })
-	  .attr("stroke","green");
+		this.link = this.svg.append("g")
+			.attr("class", "links")
+			.selectAll("line")
+			.data(graph.links)
+			.enter().append("line")
+				.attr("stroke-width", function(d) { return 2; })
+				.attr("stroke","green");
 
-	this.node = this.svg.append("g")
-	.attr("class", "nodes")
-	.selectAll("circle")
-	.data(graph.nodes)
-	.enter().append("circle")
-		.attr("r", baseThis.nodeRadius)
-		.attr("fill", (d)=> { return this.color(d.group); })
-		.attr("stroke","blue")
-		.attr("stroke-width",baseThis.nodeStrokeWidth)
-		.call(d3.drag()
-	    	.on("start", (d)=>{return this.dragstarted(d)})
-	    	.on("drag", (d)=>{return this.dragged(d)})
-	    	.on("end", (d)=>{return this.dragended(d)}));
+		this.node = this.svg.append("g")
+			.attr("class", "nodes")
+			.selectAll("circle")
+			.data(graph.nodes)
+			.enter().append("circle")
+				.attr("r", baseThis.nodeRadius)
+				.attr("fill", (d)=> { return this.color(d.group); })
+				.attr("stroke","blue")
+				.attr("stroke-width",baseThis.nodeStrokeWidth)
+				.call(d3.drag()
+			    	.on("start", (d)=>{return this.dragstarted(d)})
+			    	.on("drag", (d)=>{return this.dragged(d)})
+			    	.on("end", (d)=>{return this.dragended(d)}));
 
-	this.node.append("title")
-		.text(function(d) { return d.id; });
+		this.node.append("title")
+			.text(function(d) { return d.id; });
 
-	this.forceGraph
-		.nodes(graph.nodes)
-	 	.on("tick", ()=>{return this.ticked()});
+		this.forceGraph
+			.nodes(graph.nodes)
+		 	.on("tick", ()=>{return this.ticked()});
 
-	this.forceGraph.force("link")
-		.links(graph.links);  
+		this.forceGraph.force("link")
+			.links(graph.links);  
 	}
 
 	/**drag update
@@ -321,7 +321,9 @@ export class GraphComponent implements OnInit {
 	@param d: the node that we just finished dragging
 	**/
 	dragended(d) {
-		if (!d3.event.active) this.forceGraph.alphaTarget(0);
+		if (!d3.event.active) {
+			this.forceGraph.alphaTarget(0);
+		}
 		d.fx = null;
 		d.fy = null;
 		d.dragging = false;
@@ -332,7 +334,9 @@ export class GraphComponent implements OnInit {
 	@param d: the node that we just started dragging
 	**/
 	dragstarted(d) {
-		if (!d3.event.active) this.forceGraph.alphaTarget(0.3).restart();
+		if (!d3.event.active) {
+			this.forceGraph.alphaTarget(0.3).restart();
+		}
 		d.fx = d.x;
 		d.fy = d.y;
 		d.dragging = true;
