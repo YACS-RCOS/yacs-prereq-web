@@ -268,8 +268,11 @@ export class GraphComponent implements OnInit {
 		    return d.id
 		  }))
 		  
+		  	//keep nodes from spreading too far
 		    .force("attract", d3.forceManyBody().strength(.005).distanceMax(10000).distanceMin(60))
-		    .force("repel", d3.forceManyBody().strength(-175).distanceMax(100		).distanceMin(10))
+		    //keep nodes from sitting directly on top of each other
+		    .force("repel", d3.forceManyBody().strength(-175).distanceMax(100).distanceMin(10))
+		    //have nodes gravitate towards the canvas center
 		    .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
 
 		this.loadGraphData();
@@ -312,8 +315,8 @@ export class GraphComponent implements OnInit {
 			.selectAll("line")
 			.data(graph.links)
 			.enter().append("line")
-				.attr("stroke-width", function(d) { return 2; })
-				.attr("stroke","green");
+				.attr("stroke-width", 2)
+				.attr("stroke","#8b2c2c");
 
 		this.node = this.svg.append("g")
 			.attr("class", "nodes")
@@ -321,8 +324,8 @@ export class GraphComponent implements OnInit {
 			.data(graph.nodes)
 			.enter().append("circle")
 				.attr("r", baseThis.nodeRadius)
-				.attr("fill", (d)=> { return this.color(d.group); })
-				.attr("stroke","blue")
+				.attr("fill", "#877979")
+				.attr("stroke","#362121")
 				.attr("stroke-width",baseThis.nodeStrokeWidth)
 				.call(d3.drag()
 			    	.on("start", (d)=>{return this.dragstarted(d)})
@@ -375,6 +378,7 @@ export class GraphComponent implements OnInit {
 	dragstarted(d) {
 		//don't allow dragging on inactive nodes
 		if (!d.active) {
+			console.log("ERROR: attempted to drag an inactive node!")
 			return;
 		}
 		if (!d3.event.active) {
@@ -384,7 +388,7 @@ export class GraphComponent implements OnInit {
 		d.fy = d.y;
 		d.dragging = true;
 
-		//test hideNode
-		this.hideNode("CSCI-4680");
+		/**TEST CODE: test hideNode functionality**/
+		//this.hideNode("CSCI-4680");
 	}
 }
