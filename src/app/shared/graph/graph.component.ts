@@ -310,6 +310,19 @@ export class GraphComponent implements OnInit {
 	**/
 	render(graph : any) {
 		let baseThis = this;
+
+		//add column indicator rects
+		for (var i : number = 0; i < 8; ++i) {
+			let columnXMin = (i)*baseThis.colWidth + 10;
+			this.svg.append("rect")
+				.attr("x", columnXMin + 10)
+	           	.attr("y", 0)
+	          	.attr("width", this.colWidth - 20)                          
+	           	.attr("height", this.svgHeight)
+				.attr("fill", "rgba(20,20,80,.3");
+		}
+
+		//add edges
 		this.link = this.svg.append("g")
 			.attr("class", "links")
 			.selectAll("line")
@@ -318,6 +331,7 @@ export class GraphComponent implements OnInit {
 				.attr("stroke-width", 2)
 				.attr("stroke","#8b2c2c");
 
+		//add nodes
 		this.node = this.svg.append("g")
 			.attr("class", "nodes")
 			.selectAll("circle")
