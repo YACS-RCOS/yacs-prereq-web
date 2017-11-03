@@ -55,6 +55,9 @@ export class GraphComponent implements OnInit {
 	//our force directed simulation; we need this reference when udpating the simulation as a whole
 	private forceGraph : any;
 
+	//maintain the number of columns displayed by the graph
+	private numColumns : number = 8;
+
 	/**once ng is initialized, we setup our svg with the specified width and height constants
 	**/
 	ngOnInit() {
@@ -249,9 +252,13 @@ export class GraphComponent implements OnInit {
 	@param node: the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x+this.colWidth/4)/this.colWidth);
+		node.column = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
+		//make sure the node doesn't try to go to a non-existent column
 		if (node.column < 0) {
 			node.column = 0;
+		}
+		if (node.column > this.numColumns-1) {
+			node.column = this.numColumns-1;
 		}
 	}
   
@@ -313,16 +320,16 @@ export class GraphComponent implements OnInit {
 
 		var columnLabels : any = ["Spring 2018", "Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021"];
 		//add column indicator rects and titles
-		for (var i : number = 0; i < 8; ++i) {
-			let columnXMin = (i)*baseThis.colWidth + 10;
+		for (var i : number = 0; i < this.numColumns; ++i) {
+			let columnXMin = (i)*baseThis.colWidth;
 			this.svg.append("rect")
-				.attr("x", columnXMin + 10)
+				.attr("x", columnXMin)
 	           	.attr("y", 0)
 	          	.attr("width", this.colWidth - 20)                          
 	           	.attr("height", this.svgHeight)
 				.attr("fill", "rgba(20,20,80,.3");
 			this.svg.append("text")
-				.attr("x", columnXMin + 32)
+				.attr("x", columnXMin + 22)
 				.attr("y", 26)
 				.attr("font-size", "24px")
 				.attr("fill", "rgba(40,40,200)")
