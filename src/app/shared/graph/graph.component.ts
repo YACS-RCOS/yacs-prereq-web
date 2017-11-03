@@ -205,18 +205,38 @@ export class GraphComponent implements OnInit {
 	/**layout nodes stemming from current node
 	@param node: the node from which to recursively layout the rest of our graph
 	@param colNum: the column number of the current node
+	@param allowOverride: whether or not we should allow column overriding while laying out nodes
 	**/
-	layoutFromNode(node : any, colNum : number) {
+	layoutFromNode(node : any, colNum : number, allowOverride : boolean = false) {
 		if (node.column != colNum) {
-			this.setColNum(node,colNum);
+			this.setColNum(node,colNum, allowOverride);
 		}
 		if (this.edgeDict[node.id]) {
 			for (let edge of this.edgeDict[node.id]) {
 				if (edge.endNodeID == node.id) {
-					this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1);
+					//only re-layout a node if we are its greatest column dependency, unless we are not allowing overrides in the first place
+					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodeDict[edge.startNodeID]) > colNum)) {
+						this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1,allowOverride);
+					}
 				}
 			}	
 		}		
+	}
+
+	/**find the largest column number contained by any of the specified node's dependencies
+	@param node: the node whose dependencies we wish to check
+	@returns the largest column number of any of the specified node's dependency nodes
+	*/
+	nodeLargestColumnDependency(node : any) {
+		var maxCol = 0;
+		for (let edge of this.edgeDict[node.id]) {
+			if (edge.startNodeID == node.id) {
+				if (this.nodeDict[edge.endNodeID].column > maxCol) {
+					maxCol = this.nodeDict[edge.endNodeID].column;
+				}
+			}
+		}
+		return maxCol;
 	}
 
 	/**move Node node to column colNum
@@ -255,14 +275,9 @@ export class GraphComponent implements OnInit {
 	@param node: the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
-		//make sure the node doesn't try to go to a non-existent column
-		if (node.column < 0) {
-			node.column = 0;
-		}
-		if (node.column > this.numColumns-1) {
-			node.column = this.numColumns-1;
-		}
+		var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
+		this.setColNum(node, Math.max(Math.min(desiredColumn,this.numColumns),0), true);
+		this.layoutFromNode(node,node.column,true);
 	}
   
 	/**once the view has been initialized, we are ready to begin setting up our graph and loading in data
