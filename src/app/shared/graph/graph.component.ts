@@ -29,7 +29,7 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeWidth : number = 2;
 
 	//svg dimensions define the play area of our graph
-	private svgWidth : number = 1600;
+	private svgWidth : number = 1580;
 	private svgHeight : number = 600;
 
 	//width of column contained area
@@ -290,7 +290,7 @@ export class GraphComponent implements OnInit {
 	ticked() {
 		let baseThis = this;
 
-		this.node
+		this.node.selectAll("circle")
 		    .attr("cx", function(d) { 
 		    	//keep x within column bounds and svg bounds, unless dragging
 		    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
@@ -303,6 +303,20 @@ export class GraphComponent implements OnInit {
 		    //keep y within svg bounds
 		    .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
 		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+
+		this.node.selectAll("text")
+		    .attr("x", function(d) { 
+		    	//keep x within column bounds and svg bounds, unless dragging
+		    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
+		    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
+		    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
+		    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
+		    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+
+		    })
+		    //keep y within svg bounds
+		    .attr("y", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
+		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y) - 14); });
 
 		//update links after nodes, in order to ensure that links do not lag behind node updates
 		this.link
@@ -350,8 +364,10 @@ export class GraphComponent implements OnInit {
 			.attr("class", "nodes")
 			.selectAll("circle")
 			.data(graph.nodes)
-			.enter().append("circle")
-				.attr("r", baseThis.nodeRadius)
+			.enter().append("g")
+
+		this.node.append("circle")
+			.attr("r", baseThis.nodeRadius)
 				.attr("fill", "#877979")
 				.attr("stroke","#362121")
 				.attr("stroke-width",baseThis.nodeStrokeWidth)
@@ -359,6 +375,13 @@ export class GraphComponent implements OnInit {
 			    	.on("start", (d)=>{return this.dragstarted(d)})
 			    	.on("drag", (d)=>{return this.dragged(d)})
 			    	.on("end", (d)=>{return this.dragended(d)}));
+
+		this.node.append("text")
+	        .style("text-anchor", "middle")
+	        .style("fill", "#555")
+	        .style("font-family", "Arial")
+	        .style("font-size", 18)
+	        .text(function (d) { return d.id; });
 
 		this.node.append("title")
 			.text(function(d) { return d.id; });
