@@ -311,7 +311,8 @@ export class GraphComponent implements OnInit {
 	render(graph : any) {
 		let baseThis = this;
 
-		//add column indicator rects
+		var columnLabels : any = ["Spring 2018", "Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021"];
+		//add column indicator rects and titles
 		for (var i : number = 0; i < 8; ++i) {
 			let columnXMin = (i)*baseThis.colWidth + 10;
 			this.svg.append("rect")
@@ -320,6 +321,12 @@ export class GraphComponent implements OnInit {
 	          	.attr("width", this.colWidth - 20)                          
 	           	.attr("height", this.svgHeight)
 				.attr("fill", "rgba(20,20,80,.3");
+			this.svg.append("text")
+				.attr("x", columnXMin + 32)
+				.attr("y", 26)
+				.attr("font-size", "24px")
+				.attr("fill", "rgba(40,40,200)")
+				.text(columnLabels[i]);
 		}
 
 		//add edges
