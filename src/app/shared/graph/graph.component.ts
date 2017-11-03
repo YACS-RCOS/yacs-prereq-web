@@ -58,6 +58,9 @@ export class GraphComponent implements OnInit {
 	//maintain the number of columns displayed by the graph
 	private numColumns : number = 8;
 
+	//how many pixels above each node should the title reside
+	private nodeTitleOffset : number = 14;
+
 	/**once ng is initialized, we setup our svg with the specified width and height constants
 	**/
 	ngOnInit() {
@@ -290,33 +293,28 @@ export class GraphComponent implements OnInit {
 	ticked() {
 		let baseThis = this;
 
-		this.node.selectAll("circle")
-		    .attr("cx", function(d) { 
-		    	//keep x within column bounds and svg bounds, unless dragging
-		    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
-		    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-		    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
-		    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
-		    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+		function getNodeX(d) {
+			//keep x within column bounds and svg bounds, unless dragging
+	    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
+	    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
+	    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
+	    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
+	    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+		}
 
-		    })
+		function getNodeY(d) {
+			return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
+		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); 
+		}
+
+		this.node.selectAll("circle")
+		    .attr("cx", getNodeX)
 		    //keep y within svg bounds
-		    .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
-		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+		    .attr("cy", getNodeY);
 
 		this.node.selectAll("text")
-		    .attr("x", function(d) { 
-		    	//keep x within column bounds and svg bounds, unless dragging
-		    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
-		    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-		    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
-		    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
-		    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
-
-		    })
-		    //keep y within svg bounds
-		    .attr("y", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
-		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y) - 14); });
+		    .attr("x", getNodeX)
+		    .attr("y", function(d) {return getNodeY(d) - baseThis.nodeTitleOffset});
 
 		//update links after nodes, in order to ensure that links do not lag behind node updates
 		this.link
