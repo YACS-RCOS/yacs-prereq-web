@@ -215,7 +215,7 @@ export class GraphComponent implements OnInit {
 			for (let edge of this.edgeDict[node.id]) {
 				if (edge.endNodeID == node.id) {
 					//only re-layout a node if we are its greatest column dependency, unless we are not allowing overrides in the first place
-					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodeDict[edge.startNodeID]) > colNum)) {
+					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodeDict[edge.startNodeID]) > node.column)) {
 						this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1,allowOverride);
 					}
 				}
@@ -276,8 +276,18 @@ export class GraphComponent implements OnInit {
 	**/
 	moveToNearestColumn(node : any) {
 		var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
-		this.setColNum(node, Math.max(Math.min(desiredColumn,this.numColumns),0), true);
-		this.layoutFromNode(node,node.column,true);
+		var startColumn = node.column;
+		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
+		if (startColumn > desiredColumn) {
+			for (var i : number = startColumn-1; i >= desiredColumn; --i) {
+				this.layoutFromNode(node,i,true);
+			}
+		}
+		else {
+			for (var i : number = startColumn+1; i <= desiredColumn; ++i) {
+				this.layoutFromNode(node,i,true);
+			}	
+		}
 	}
   
 	/**once the view has been initialized, we are ready to begin setting up our graph and loading in data
