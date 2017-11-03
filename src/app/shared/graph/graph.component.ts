@@ -345,6 +345,7 @@ export class GraphComponent implements OnInit {
 				.attr("y", 26)
 				.attr("font-size", "24px")
 				.attr("fill", "rgba(40,40,200)")
+				.style("pointer-events", "none")
 				.text(columnLabels[i]);
 		}
 
@@ -379,10 +380,8 @@ export class GraphComponent implements OnInit {
 	        .style("fill", "#555")
 	        .style("font-family", "Arial")
 	        .style("font-size", 18)
+	        .style("pointer-events", "none")
 	        .text(function (d) { return d.id; });
-
-		this.node.append("title")
-			.text(function(d) { return d.id; });
 
 		this.forceGraph
 			.nodes(graph.nodes)
