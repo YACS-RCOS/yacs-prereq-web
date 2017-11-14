@@ -29,7 +29,7 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeWidth : number = 2;
 
 	//svg dimensions define the play area of our graph
-	private svgWidth : number = 1600;
+	private svgWidth : number = 1580;
 	private svgHeight : number = 600;
 
 	//width of column contained area
@@ -55,7 +55,14 @@ export class GraphComponent implements OnInit {
 	//our force directed simulation; we need this reference when udpating the simulation as a whole
 	private forceGraph : any;
 
-	/*once ng is initialized, we setup our svg with the specified width and height constants*/
+	//maintain the number of columns displayed by the graph
+	private numColumns : number = 8;
+
+	//how many pixels above each node should the title reside
+	private nodeTitleOffset : number = 14;
+
+	/**once ng is initialized, we setup our svg with the specified width and height constants
+	**/
 	ngOnInit() {
 		let baseThis = this;
 		this.svg = d3.select(this.graphContainer.nativeElement).append('svg')
@@ -64,7 +71,8 @@ export class GraphComponent implements OnInit {
 		        .attr("height", baseThis.svgHeight);
 	}
 
-	/*load in graph data from prereq file (hosted by data service)*/
+	/**load in graph data from prereq file (hosted by data service)
+	**/
 	loadGraphData() {
 		let baseThis = this;
 		d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
@@ -96,24 +104,63 @@ export class GraphComponent implements OnInit {
 
 			//layout standard nodes and edges
 			baseThis.layoutColumns();
+
+			//add the finalized graph
 			baseThis.render(baseThis.graph);
 		});
 	}
 
-	/*add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed*/
+	/**add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed
+	@param id: the string id which corresponds to the newly added node
+	@param containedNodeIDs: list of string ids corresponding to nodes to which this node branches
+	@returns a reference to the newly constructed node in our nodeDict
+	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.graph.nodes.push({"id" : id});
+		this.graph.nodes.push({"id" : id, "active" : true});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
 		this.graph.nodes[this.graph.nodes.length-1].column = -1;
 		return this.nodeDict[id];
 	}
 
-	/*add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node*/
+	/**hide the specified node, removing it from the graph and setting it to inactive
+	@param id: the string id of the node to hide
+	**/
+	hideNode(id:string) {
+		//first find and remove the desired node
+		var curNode;
+		for (var i : number = 0; i < this.node._groups[0].length; ++i) {
+			curNode = this.node._groups[0][i];
+			var curTitle = curNode.childNodes[0].childNodes[0].data;
+			//make sure the ids are the same
+			if (curTitle == id) {
+				this.node._groups[0].splice(i,1);
+				console.log("removing node: " + curTitle + " at index: " + i);
+				break;
+			}
+		}
+		//now find and remove any edges that connect to the removed node
+		for (var i : number = 0; i < this.link._groups[0].length; ++i) {
+			var curLink : any = this.link._groups[0][i];
+			//make sure the locations are the same
+			if ((curLink["x1"].animVal.value == curNode["cx"].animVal.value && curLink["y1"].animVal.value == curNode["cy"].animVal.value) || 
+				(curLink["x2"].animVal.value == curNode["cx"].animVal.value && curLink["y2"].animVal.value == curNode["cy"].animVal.value)) {
+				this.link._groups[0].splice(i,1);
+				console.log("removing edge: " + curLink + " at index: " + i);
+			}
+		}
+		this.nodeDict[id].active = false;
+	}
+
+	/**add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
+	@param startNode: the initial node forming this edge
+	@param endNode: the final node to which this edge connects
+	@param edgeType: the string type of the newly constructed edge (currently defaulting to "prereq")
+	**/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
 			this.graph.links.push({"source" : startNode.id,"target" : endNode.id, 
-				"startNodeID" : startNode.id, "endNodeID" : endNode.id});
+				"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType});
 
 			if (!this.edgeDict[startNode.id]) {
 				this.edgeDict[startNode.id] = [];
@@ -128,7 +175,8 @@ export class GraphComponent implements OnInit {
 		return false;
 	}
 
-	/*organize nodes into columns based on their prereqs*/
+	/**organize nodes into columns based on their prereqs
+	**/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
 		for (let node of this.columnList[0]) {
@@ -154,21 +202,48 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	/*layout nodes stemming from current node*/
-	layoutFromNode(node : any, colNum : number) {
+	/**layout nodes stemming from current node
+	@param node: the node from which to recursively layout the rest of our graph
+	@param colNum: the column number of the current node
+	@param allowOverride: whether or not we should allow column overriding while laying out nodes
+	**/
+	layoutFromNode(node : any, colNum : number, allowOverride : boolean = false) {
 		if (node.column != colNum) {
-			this.setColNum(node,colNum);
+			this.setColNum(node,colNum, allowOverride);
 		}
 		if (this.edgeDict[node.id]) {
 			for (let edge of this.edgeDict[node.id]) {
 				if (edge.endNodeID == node.id) {
-					this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1);
+					//only re-layout a node if we are its greatest column dependency, unless we are not allowing overrides in the first place
+					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodeDict[edge.startNodeID]) > node.column)) {
+						this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1,allowOverride);
+					}
 				}
 			}	
 		}		
 	}
 
-	/*move Node node to column colNum*/
+	/**find the largest column number contained by any of the specified node's dependencies
+	@param node: the node whose dependencies we wish to check
+	@returns the largest column number of any of the specified node's dependency nodes
+	*/
+	nodeLargestColumnDependency(node : any) {
+		var maxCol = 0;
+		for (let edge of this.edgeDict[node.id]) {
+			if (edge.startNodeID == node.id) {
+				if (this.nodeDict[edge.endNodeID].column > maxCol) {
+					maxCol = this.nodeDict[edge.endNodeID].column;
+				}
+			}
+		}
+		return maxCol;
+	}
+
+	/**move Node node to column colNum
+	@param node: the node whose column number we wish to set
+	@param colNum: the column number to set for the specified node
+	@param allowColumnChange: whether we should set the node column if it has already been set (true) or leave it as is (false)
+	**/
 	setColNum(node : any, colNum: number, allowColumnChange = false) {
 		if (colNum == node.column) {
 			return;
@@ -196,117 +271,197 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	/*move node into the nearest column (to be called upon drag end)*/
+	/**move node into the nearest column (to be called upon drag end)
+	@param node: the node which we wish to snap to the colum nearest to its position
+	**/
 	moveToNearestColumn(node : any) {
-		node.column = Math.floor((node.x+this.colWidth/4)/this.colWidth);
-		if (node.column < 0) {
-			node.column = 0;
+		var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
+		var startColumn = node.column;
+		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
+		if (startColumn > desiredColumn) {
+			for (var i : number = startColumn-1; i >= desiredColumn; --i) {
+				this.layoutFromNode(node,i,true);
+			}
+		}
+		else {
+			for (var i : number = startColumn+1; i <= desiredColumn; ++i) {
+				this.layoutFromNode(node,i,true);
+			}	
 		}
 	}
   
-  /*once the view has been initialized, we are ready to begin setting up our graph and loading in data*/
-  ngAfterViewInit(){
-  	let baseThis = this;
-    this.svg = d3.select("svg");
+	/**once the view has been initialized, we are ready to begin setting up our graph and loading in data
+	**/
+	ngAfterViewInit() {
+		let baseThis = this;
+		this.svg = d3.select("svg");
 
-    this.color = d3.scaleOrdinal(d3.schemeCategory20);
-    
-    this.forceGraph = d3.forceSimulation()
-        .force("link", d3.forceLink().id(function (d:{ id: string}) {
-        return d.id
-      }))
-      
-        .force("attract", d3.forceManyBody().strength(.005).distanceMax(10000).distanceMin(60))
-        .force("repel", d3.forceManyBody().strength(-175).distanceMax(100).distanceMin(10))
-        .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
-    
-    this.loadGraphData();
-  }
+		this.color = d3.scaleOrdinal(d3.schemeCategory20);
+
+		this.forceGraph = d3.forceSimulation()
+			.force("link", d3.forceLink().id(function (d:{ id: string}) {
+		    return d.id
+		  }))
+		  
+		  	//keep nodes from spreading too far
+		    .force("attract", d3.forceManyBody().strength(.005).distanceMax(10000).distanceMin(60))
+		    //keep nodes from sitting directly on top of each other
+		    .force("repel", d3.forceManyBody().strength(-175).distanceMax(100).distanceMin(10))
+		    //have nodes gravitate towards the canvas center
+		    .force("center", d3.forceCenter(baseThis.svgWidth / 2, baseThis.svgHeight / 2));
+
+		this.loadGraphData();
+	}
   
-  /*graph update. Update node positions and constraints, followed by edge positions*/
-  ticked() {
-  	let baseThis = this;
+	/**graph update. Update node positions and constraints, followed by edge positions
+	**/
+	ticked() {
+		let baseThis = this;
 
-  	this.node
-        .attr("cx", function(d) { 
-        	//keep x within column bounds and svg bounds, unless dragging
-        	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
-        	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
-        	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
-        	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
-        	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+		function getNodeX(d) {
+			//keep x within column bounds and svg bounds, unless dragging
+	    	//xBuffer determines how much padding we need to keep between the node and the edge of the column or svg
+	    	let xBuffer = baseThis.nodeRadius+baseThis.nodeStrokeWidth;
+	    	let columnXMin = d.dragging ? 0 : (+d.column)*baseThis.colWidth + 10;
+	    	let columnXMax = d.dragging ? baseThis.svgWidth : (+d.column)*baseThis.colWidth + 90;
+	    	return d.x = Math.max(xBuffer + columnXMin, Math.min(columnXMax - xBuffer, d.x)); 
+		}
 
-        })
-        //keep y within svg bounds
-        .attr("cy", function(d) { return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
-        	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); });
+		function getNodeY(d) {
+			return d.y = Math.max(baseThis.nodeRadius+baseThis.nodeStrokeWidth, 
+		    	Math.min(baseThis.svgHeight - baseThis.nodeRadius - baseThis.nodeStrokeWidth, d.y)); 
+		}
 
-    //update links after nodes, in order to ensure that links do not lag behind node updates
-    this.link
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+		this.node.selectAll("circle")
+		    .attr("cx", getNodeX)
+		    //keep y within svg bounds
+		    .attr("cy", getNodeY);
 
-  }
+		this.node.selectAll("text")
+		    .attr("x", getNodeX)
+		    .attr("y", function(d) {return getNodeY(d) - baseThis.nodeTitleOffset});
+
+		//update links after nodes, in order to ensure that links do not lag behind node updates
+		this.link
+		    .attr("x1", function(d) { return d.source.x; })
+		    .attr("y1", function(d) { return d.source.y; })
+		    .attr("x2", function(d) { return d.target.x; })
+		    .attr("y2", function(d) { return d.target.y; });
+	}
   
-  /*adds the graph to the page. This is the last step to bring up our force directed graph*/
-  render(graph){
-  	let baseThis = this;
-    this.link = this.svg.append("g")
-    .attr("class", "links")
-    .selectAll("line")
-    .data(graph.links)
-    .enter().append("line")
-      .attr("stroke-width", function(d) { return 2; })
-      .attr("stroke","green");
+	/**adds the graph to the page. This is the last step to bring up our force directed graph
+	@param graph: the graph element to add to the page
+	**/
+	render(graph : any) {
+		let baseThis = this;
 
-    this.node = this.svg.append("g")
-    .attr("class", "nodes")
-    .selectAll("circle")
-    .data(graph.nodes)
-    .enter().append("circle")
-      .attr("r", baseThis.nodeRadius)
-      .attr("fill", (d)=> { return this.color(d.group); })
-      .attr("stroke","blue")
-      .attr("stroke-width",baseThis.nodeStrokeWidth)
-      .call(d3.drag()
-          .on("start", (d)=>{return this.dragstarted(d)})
-          .on("drag", (d)=>{return this.dragged(d)})
-          .on("end", (d)=>{return this.dragended(d)}));
+		var columnLabels : any = ["Spring 2018", "Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021"];
+		//add column indicator rects and titles
+		for (var i : number = 0; i < this.numColumns; ++i) {
+			let columnXMin = (i)*baseThis.colWidth;
+			this.svg.append("rect")
+				.attr("x", columnXMin)
+	           	.attr("y", 0)
+	          	.attr("width", this.colWidth - 20)                          
+	           	.attr("height", this.svgHeight)
+				.attr("fill", "rgba(20,20,80,.3");
+			this.svg.append("text")
+				.attr("x", columnXMin + 22)
+				.attr("y", 26)
+				.attr("font-size", "24px")
+				.attr("fill", "rgba(40,40,200)")
+				.style("pointer-events", "none")
+				.text(columnLabels[i]);
+		}
 
-    this.node.append("title")
-      .text(function(d) { return d.id; });
+		//add edges
+		this.link = this.svg.append("g")
+			.attr("class", "links")
+			.selectAll("line")
+			.data(graph.links)
+			.enter().append("line")
+				.attr("stroke-width", 2)
+				.attr("stroke","#8b2c2c");
 
-    this.forceGraph
-      .nodes(graph.nodes)
-      .on("tick", ()=>{return this.ticked()});
+		//add nodes
+		this.node = this.svg.append("g")
+			.attr("class", "nodes")
+			.selectAll("circle")
+			.data(graph.nodes)
+			.enter().append("g")
 
-    this.forceGraph.force("link")
-      .links(graph.links);  
-    console.log(graph);
-  }
-  
-  /*drag update*/
-  dragged(d) {
-    d.fx = d3.event.x;
-    d.fy = d3.event.y;
-  }
-  
-  /*finished dragging; snap to the nearest column*/
-  dragended(d) {
-    if (!d3.event.active) this.forceGraph.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-    d.dragging = false;
-    this.moveToNearestColumn(d);
-  }
-  
-  /*started draggingl mark the drag node as being dragged*/
-  dragstarted(d) {
-    if (!d3.event.active) this.forceGraph.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-    d.dragging = true;
-  }
+		this.node.append("circle")
+			.attr("r", baseThis.nodeRadius)
+				.attr("fill", "#877979")
+				.attr("stroke","#362121")
+				.attr("stroke-width",baseThis.nodeStrokeWidth)
+				.call(d3.drag()
+			    	.on("start", (d)=>{return this.dragstarted(d)})
+			    	.on("drag", (d)=>{return this.dragged(d)})
+			    	.on("end", (d)=>{return this.dragended(d)}));
+
+		this.node.append("text")
+	        .style("text-anchor", "middle")
+	        .style("fill", "#555")
+	        .style("font-family", "Arial")
+	        .style("font-size", 18)
+	        .style("pointer-events", "none")
+	        .text(function (d) { return d.id; });
+
+		this.forceGraph
+			.nodes(graph.nodes)
+		 	.on("tick", ()=>{return this.ticked()});
+
+		this.forceGraph.force("link")
+			.links(graph.links);  
+	}
+
+	/**drag update
+	@param d: the node being dragged
+	**/
+	dragged(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			return;
+		}
+		d.fx = d3.event.x;
+		d.fy = d3.event.y;
+	}
+
+	/**finished dragging; snap to the nearest column
+	@param d: the node that we just finished dragging
+	**/
+	dragended(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			return;
+		}
+		if (!d3.event.active) {
+			this.forceGraph.alphaTarget(0);
+		}
+		d.fx = null;
+		d.fy = null;
+		d.dragging = false;
+		this.moveToNearestColumn(d);
+	}
+
+	/**started dragging; mark the drag node as being dragged
+	@param d: the node that we just started dragging
+	**/
+	dragstarted(d) {
+		//don't allow dragging on inactive nodes
+		if (!d.active) {
+			console.log("ERROR: attempted to drag an inactive node!")
+			return;
+		}
+		if (!d3.event.active) {
+			this.forceGraph.alphaTarget(0.3).restart();
+		}
+		d.fx = d.x;
+		d.fy = d.y;
+		d.dragging = true;
+
+		/**TEST CODE: test hideNode functionality**/
+		//this.hideNode("CSCI-4680");
+	}
 }
