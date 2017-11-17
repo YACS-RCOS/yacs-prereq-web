@@ -4,6 +4,14 @@ language: node_js
 node_js:
   - '7'
 
+
+addons:
+apt:
+  sources:
+    - google-chrome
+  packages:
+    - google-chrome-stable
+    - google-chrome-beta
 install:
   - npm install
 
