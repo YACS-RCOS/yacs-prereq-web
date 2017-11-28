@@ -25,7 +25,6 @@ before_script:
 - npm install -g karma
 - npm install
 - ng build
-- ng serve
 
 script: 
  - npm test
