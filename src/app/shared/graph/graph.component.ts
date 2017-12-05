@@ -61,7 +61,8 @@ export class GraphComponent implements OnInit {
 	//how many pixels above each node should the title reside
 	private nodeTitleOffset : number = 14;
 
-	/**once ng is initialized, we setup our svg with the specified width and height constants
+	/**
+	once ng is initialized, we setup our svg with the specified width and height constants
 	**/
 	ngOnInit() {
 		let baseThis = this;
@@ -71,7 +72,8 @@ export class GraphComponent implements OnInit {
 		        .attr("height", baseThis.svgHeight);
 	}
 
-	/**load in graph data from prereq file (hosted by data service)
+	/**
+	load in graph data from prereq file (hosted by data service)
 	**/
 	loadGraphData() {
 		let baseThis = this;
@@ -110,7 +112,8 @@ export class GraphComponent implements OnInit {
 		});
 	}
 
-	/**add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed
+	/**
+	add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed
 	@param id: the string id which corresponds to the newly added node
 	@param containedNodeIDs: list of string ids corresponding to nodes to which this node branches
 	@returns a reference to the newly constructed node in our nodeDict
@@ -123,7 +126,8 @@ export class GraphComponent implements OnInit {
 		return this.nodeDict[id];
 	}
 
-	/**locks the specified node, disallowing it from changing columns
+	/**
+	locks the specified node, disallowing it from changing columns
 	@param id: the string id of the node to hide
 	**/
 	lockNode(id:string) {
@@ -142,7 +146,8 @@ export class GraphComponent implements OnInit {
 		return false;
 	}
 
-	/**hide the specified node, removing it from the graph and setting it to inactive
+	/**
+	hide the specified node, removing it from the graph and setting it to inactive
 	@param id: the string id of the node to hide
 	**/
 	hideNode(id:string) {
@@ -171,7 +176,8 @@ export class GraphComponent implements OnInit {
 		this.nodeDict[id].active = false;
 	}
 
-	/**add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
+	/**
+	add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
 	@param startNode: the initial node forming this edge
 	@param endNode: the final node to which this edge connects
 	@param edgeType: the string type of the newly constructed edge (currently defaulting to "prereq")
@@ -194,7 +200,8 @@ export class GraphComponent implements OnInit {
 		return false;
 	}
 
-	/**organize nodes into columns based on their prereqs
+	/**
+	organize nodes into columns based on their prereqs
 	**/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
@@ -221,7 +228,8 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	/**layout nodes stemming from current node
+	/**
+	layout nodes stemming from current node
 	@param node: the node from which to recursively layout the rest of our graph
 	@param colNum: the column number of the current node
 	@param allowOverride: whether or not we should allow column overriding while laying out nodes
@@ -242,7 +250,8 @@ export class GraphComponent implements OnInit {
 		}		
 	}
 
-	/**find the largest column number contained by any of the specified node's dependencies
+	/**
+	find the largest column number contained by any of the specified node's dependencies
 	@param node: the node whose dependencies we wish to check
 	@returns the largest column number of any of the specified node's dependency nodes
 	*/
@@ -258,7 +267,8 @@ export class GraphComponent implements OnInit {
 		return maxCol;
 	}
 
-	/**move Node node to column colNum
+	/**
+	move Node node to column colNum
 	@param node: the node whose column number we wish to set
 	@param colNum: the column number to set for the specified node
 	@param allowColumnChange: whether we should set the node column if it has already been set (true) or leave it as is (false)
@@ -296,7 +306,8 @@ export class GraphComponent implements OnInit {
 		}
 	}
 
-	/**move node into the nearest column (to be called upon drag end)
+	/**
+	move node into the nearest column (to be called upon drag end)
 	@param node: the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
@@ -309,7 +320,8 @@ export class GraphComponent implements OnInit {
 		}
 	}
   
-	/**once the view has been initialized, we are ready to begin setting up our graph and loading in data
+	/**
+	once the view has been initialized, we are ready to begin setting up our graph and loading in data
 	**/
 	ngAfterViewInit() {
 		let baseThis = this;
@@ -332,7 +344,8 @@ export class GraphComponent implements OnInit {
 		this.loadGraphData();
 	}
   
-	/**graph update. Update node positions and constraints, followed by edge positions
+	/**
+	graph update. Update node positions and constraints, followed by edge positions
 	**/
 	ticked() {
 		let baseThis = this;
@@ -368,7 +381,8 @@ export class GraphComponent implements OnInit {
 		    .attr("y2", function(d) { return d.target.y; });
 	}
   
-	/**adds the graph to the page. This is the last step to bring up our force directed graph
+	/**
+	adds the graph to the page. This is the last step to bring up our force directed graph
 	@param graph: the graph element to add to the page
 	**/
 	render(graph : any) {
@@ -435,7 +449,8 @@ export class GraphComponent implements OnInit {
 			.links(graph.links);  
 	}
 
-	/**drag update
+	/**
+	drag update
 	@param d: the node being dragged
 	**/
 	dragged(d) {
@@ -447,7 +462,8 @@ export class GraphComponent implements OnInit {
 		d.fy = d3.event.y;
 	}
 
-	/**finished dragging; snap to the nearest column
+	/**
+	finished dragging; snap to the nearest column
 	@param d: the node that we just finished dragging
 	**/
 	dragended(d) {
@@ -464,7 +480,8 @@ export class GraphComponent implements OnInit {
 		this.moveToNearestColumn(d);
 	}
 
-	/**started dragging; mark the drag node as being dragged
+	/**
+	started dragging; mark the drag node as being dragged
 	@param d: the node that we just started dragging
 	**/
 	dragstarted(d) {
@@ -482,5 +499,7 @@ export class GraphComponent implements OnInit {
 
 		/**TEST CODE: test hideNode functionality**/
 		//this.hideNode("CSCI-4680");
+		/**TEST CODE: test lockNpde functionality**/
+		//this.lockNode("CSCI-4680");
 	}
 }
