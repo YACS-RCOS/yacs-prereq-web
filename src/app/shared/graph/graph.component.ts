@@ -116,11 +116,30 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodeDict
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.graph.nodes.push({"id" : id, "active" : true});
+		this.graph.nodes.push({"id" : id, "active" : true, "locked" : false});
 		this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
 		this.graph.nodes[this.graph.nodes.length-1].column = -1;
 		return this.nodeDict[id];
+	}
+
+	/**locks the specified node, disallowing it from changing columns
+	@param id: the string id of the node to hide
+	**/
+	lockNode(id:string) {
+		var curNode;
+		for (var i : number = 0; i < this.node._groups[0].length; ++i) {
+			curNode = this.node._groups[0][i];
+			var curTitle = curNode.childNodes[0].childNodes[0].data;
+			//make sure the ids are the same
+			if (curTitle == id) {
+				//found the node; now lock it
+				this.node._groups[0][i].locked = true;
+				return true;
+			}
+		}
+		//the desired node was not found
+		return false;
 	}
 
 	/**hide the specified node, removing it from the graph and setting it to inactive
@@ -245,6 +264,12 @@ export class GraphComponent implements OnInit {
 	@param allowColumnChange: whether we should set the node column if it has already been set (true) or leave it as is (false)
 	**/
 	setColNum(node : any, colNum: number, allowColumnChange = false) {
+		//disallow moving a locked node
+		if (node.locked) {
+			return;
+		}
+
+		//disallow moving a node to its current column
 		if (colNum == node.column) {
 			return;
 		}
@@ -278,15 +303,9 @@ export class GraphComponent implements OnInit {
 		var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
 		var startColumn = node.column;
 		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
-		if (startColumn > desiredColumn) {
-			for (var i : number = startColumn-1; i >= desiredColumn; --i) {
-				this.layoutFromNode(node,i,true);
-			}
-		}
-		else {
-			for (var i : number = startColumn+1; i <= desiredColumn; ++i) {
-				this.layoutFromNode(node,i,true);
-			}	
+		while (startColumn != desiredColumn) {
+			startColumn += (startColumn > desiredColumn ? -1 : 1);
+			this.layoutFromNode(node,startColumn,true);
 		}
 	}
   
