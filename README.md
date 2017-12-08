@@ -1,3 +1,6 @@
+# What is Planner?
+Planner is a visual semester planning graph that allows students to visually see degree requirements and accordingly plan out their classes.
+
 # prereq-planning
 Frontend for visualizing course prerequisites and planning degrees
 
