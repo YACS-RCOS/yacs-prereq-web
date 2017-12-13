@@ -9,3 +9,7 @@ Node Stroke Width: 2;
 Width of graph: 1600;
 Height of graph: 600;
 Width of Column: 200
+
+font-family: $font;
+font-weight: 300;
+margin: 0;
