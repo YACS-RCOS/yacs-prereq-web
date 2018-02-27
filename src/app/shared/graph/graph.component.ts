@@ -33,7 +33,7 @@ export class GraphComponent implements OnInit {
 	private svgHeight : number = 600;
 
 	//width of column contained area
-	private colWidth : number = 200;
+	private colWidth : number = 195;
 
 	//reference to graph base svg
 	private svg : any;
@@ -63,7 +63,8 @@ export class GraphComponent implements OnInit {
 
 	private cnv : any = document.createElement("canvas");
 	private ctx : any = this.cnv.getContext("2d");
-	private bgColor : any = "rgba(200,200,255,1)";
+	private bgColor : any = "rgba(255,255,255,1)";
+	private columnColor : any = "rgba(200,200,200,1)";
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -374,11 +375,24 @@ export class GraphComponent implements OnInit {
 
 	redrawScreen() {
 		this.clearScreen();
+		this.drawSemesterColumns();
+		/*for (var i : number = 0; i < this.nodes.length; ++i) {
+
+		}*/
 	}
 
 	clearScreen() {
-		this.ctx.fillStyle="rgb(40,120,255)";
+		this.ctx.fillStyle=this.bgColor;
 		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
+	}
+
+	drawSemesterColumns() {
+		for (var i : number = 0; i < this.numColumns; ++i) {
+			let columnXMin = i*this.colWidth;
+			this.ctx.fillStyle	= this.columnColor;
+			this.ctx.fillRect(columnXMin + 20, 0, this.colWidth - 20, this.svgHeight);
+		}
+
 	}
   
 	/**
