@@ -61,6 +61,10 @@ export class GraphComponent implements OnInit {
 	//how many pixels above each node should the title reside
 	private nodeTitleOffset : number = 14;
 
+	private cnv : any = document.createElement("canvas");
+	private ctx : any = this.cnv.getContext("2d");
+	private bgColor : any = "rgba(200,200,255,1)";
+
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
 	**/
@@ -70,6 +74,10 @@ export class GraphComponent implements OnInit {
 		        .attr("class", "panel")
 		        .attr("width", baseThis.svgWidth)
 		        .attr("height", baseThis.svgHeight);
+
+		this.cnv.width = this.svgWidth;
+		this.cnv.height = this.svgHeight;
+		document.body.appendChild(this.cnv);
 	}
 
 	/**
@@ -151,29 +159,12 @@ export class GraphComponent implements OnInit {
 	@param id: the string id of the node to hide
 	**/
 	hideNode(id:string) {
+		console.log("***testing hideNode***");
 		//first find and remove the desired node
-		var curNode;
-		for (var i : number = 0; i < this.node._groups[0].length; ++i) {
-			curNode = this.node._groups[0][i];
-			var curTitle = curNode.childNodes[0].childNodes[0].data;
-			//make sure the ids are the same
-			if (curTitle == id) {
-				this.node._groups[0].splice(i,1);
-				console.log("removing node: " + curTitle + " at index: " + i);
-				break;
-			}
-		}
-		//now find and remove any edges that connect to the removed node
-		for (var i : number = 0; i < this.link._groups[0].length; ++i) {
-			var curLink : any = this.link._groups[0][i];
-			//make sure the locations are the same
-			if ((curLink["x1"].animVal.value == curNode["cx"].animVal.value && curLink["y1"].animVal.value == curNode["cy"].animVal.value) || 
-				(curLink["x2"].animVal.value == curNode["cx"].animVal.value && curLink["y2"].animVal.value == curNode["cy"].animVal.value)) {
-				this.link._groups[0].splice(i,1);
-				console.log("removing edge: " + curLink + " at index: " + i);
-			}
-		}
-		this.nodeDict[id].active = false;
+		//delete(this.nodeDict[id]);
+		//this.forceGraph.selectAll("node") = this.nodeDict;
+		//this.forceGraph.nodes(this.nodeDict);
+		//this.forceGraph.restart();
 	}
 
 	/**
@@ -380,6 +371,15 @@ export class GraphComponent implements OnInit {
 		    .attr("x2", function(d) { return d.target.x; })
 		    .attr("y2", function(d) { return d.target.y; });
 	}
+
+	redrawScreen() {
+		this.clearScreen();
+	}
+
+	clearScreen() {
+		this.ctx.fillStyle="rgb(40,120,255)";
+		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
+	}
   
 	/**
 	adds the graph to the page. This is the last step to bring up our force directed graph
@@ -387,6 +387,8 @@ export class GraphComponent implements OnInit {
 	**/
 	render(graph : any) {
 		let baseThis = this;
+
+		this.redrawScreen();
 
 		var columnLabels : any = ["Spring 2018", "Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021"];
 		//add column indicator rects and titles
@@ -498,8 +500,8 @@ export class GraphComponent implements OnInit {
 		d.dragging = true;
 
 		/**TEST CODE: test hideNode functionality**/
-		//this.hideNode("CSCI-4680");
-		/**TEST CODE: test lockNpde functionality**/
-		//this.lockNode("CSCI-4680");
+		this.hideNode("CSCI-4210");
+		/**TEST CODE: test lockNode functionality**/
+		//this.lockNode("CSCI-4210");
 	}
 }
