@@ -70,11 +70,6 @@ export class GraphComponent implements OnInit {
 		this.ctx = this.cnv.getContext("2d");
 		this.cnv.width = this.svgWidth;
 		this.cnv.height = this.svgHeight;
-		
-		//canvas render test
-		this.ctx.fillStyle="rgba(255,50,50,1)";
-		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
-
 	}
 
 	/**
@@ -112,6 +107,9 @@ export class GraphComponent implements OnInit {
 		// 	//layout standard nodes and edges
 		// 	baseThis.layoutColumns();
 		// });
+
+		//begin the graph update loop
+		this.update();
 	}
 
 	/**
@@ -313,7 +311,6 @@ export class GraphComponent implements OnInit {
 	}
 
 	redrawScreen() {
-		console.log("atgergerf");
 		this.drawSemesterColumns();
 		/*for (var i : number = 0; i < this.nodes.length; ++i) {
 
@@ -344,6 +341,7 @@ export class GraphComponent implements OnInit {
 	**/
 	update() {
 		this.redrawScreen();
+		requestAnimationFrame(this.update.bind(this));
 	}
 
 	//_intervalId = setInterval(this.update, 1000 / this.fps);
