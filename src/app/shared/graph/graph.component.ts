@@ -19,6 +19,7 @@ import * as d3 from 'd3';
 export class GraphComponent implements OnInit {
 	@Input() private data: Array < any > ;
 	@ViewChild('graph') private graphContainer: ElementRef;
+	@ViewChild('graphCanvas') canvasRef: ElementRef;
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
@@ -50,8 +51,8 @@ export class GraphComponent implements OnInit {
 	private nodeTitleOffset : number = 14;
 
 	//canvas/context for rendering
-	private cnv : any = document.createElement("canvas");
-	private ctx : any = this.cnv.getContext("2d");
+	private cnv : any; 
+	private ctx : any;
 	
 	//visual style 
 	private bgColor : any = "rgba(255,255,255,1)";
@@ -65,9 +66,15 @@ export class GraphComponent implements OnInit {
 	**/
 	ngOnInit() {
 		//init canvas
+		this.cnv = this.canvasRef.nativeElement;
+		this.ctx = this.cnv.getContext("2d");
 		this.cnv.width = this.svgWidth;
 		this.cnv.height = this.svgHeight;
-		document.body.appendChild(this.cnv);
+		
+		//canvas render test
+		this.ctx.fillStyle="rgba(255,50,50,1)";
+		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
+
 	}
 
 	/**
@@ -327,7 +334,7 @@ export class GraphComponent implements OnInit {
 
 	}
 
-	ngOnUpdate() {
+	ngOnTick() {
 		console.log("updating");
 		this.redrawScreen();
 	}
