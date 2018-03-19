@@ -24,9 +24,19 @@ export class GraphComponent implements OnInit {
 	
 	@HostListener('document:mousemove', ['$event']) 
 	onMouseMove(e) {
-		console.log(this.getMouseDocument(e,this.cnv));
-		console.log(this.testNodes[0]);
+		this.mousePos = this.getMouseDocument(e,this.cnv);
 	}
+	@HostListener('document:mousedown', ['$event'])
+	onMouseDown(e) {
+		this.mouseClicked = true;
+		this.mouseHeld = true;
+	}
+	@HostListener('document:mouseup', ['$event'])
+	onMouseUp(e) {
+		this.mouseHeld = false;
+	}
+
+
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
@@ -73,12 +83,19 @@ export class GraphComponent implements OnInit {
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
 	private nodeColor : any = "rgba(255,100,100,1)";
+	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
+	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
 
 	//forces strength
 	private nodeAttractionForce : number = .5;
 	private nodeRepelForce : number = 7;
 	private nodeRepelMaxDist : number = 50;
+
+	//mouse info
+	private mousePos : any = {x:-1,y:-1};
+	private mouseHeld : Boolean = false;
+	private mouseClicked : Boolean = false;
 
 	//test node data
 	private testNodes : any = [];
@@ -94,8 +111,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes.push({x:100,y:100,dragging:false});
-		//this.testNodes.push({x:150,y:200,dragging:false});
+		this.testNodes.push({x:100,y:100,state:"idle"});
+		this.testNodes.push({x:150,y:200,state:"idle"});
 	}
 
 	/**
@@ -355,11 +372,11 @@ export class GraphComponent implements OnInit {
 	**/
 	drawNodes() {
 		this.ctx.lineWidth = this.nodeStrokeWidth;
-		this.ctx.strokeStyle = this.nodeStrokeColor;
-		this.ctx.fillStyle = this.nodeColor;
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
 			this.ctx.beginPath();
 			this.ctx.arc(this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,0,2*Math.PI);
+			this.ctx.strokeStyle = this.testNodes[i].state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
+			this.ctx.fillStyle = this.testNodes[i].state == "hover" ? this.nodeHoverColor : this.nodeColor;
 			this.ctx.fill();
 			this.ctx.stroke();
 		}
@@ -389,8 +406,14 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			if (this.testNodes[i].dragging) {
-				
+			//check if hovering
+			if (this.testNodes[i].state != "drag") {
+				if (this.ptInCircle(this.mousePos.x,this.mousePos.y,this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,true)) {
+					this.testNodes[i].state = "hover";
+				}
+				else {
+					this.testNodes[i].state = "idle";
+				}
 			}
 			let x1 = this.testNodes[i].x;
 			let y1 = this.testNodes[i].y;
@@ -449,6 +472,23 @@ export class GraphComponent implements OnInit {
 	}
 
 	/**
+	check whether or not a point lies in a circle
+	@param {number} px the x coordinate of the point
+	@param {number} py the y coordinate of the point
+	@param {number} cx the center x coordinate of the circle
+	@param {number} cy the center y coordinate of the circle
+	@param {number} cr the radius of the circle
+	@param {Boolean} includeTouching whether or not the point should be considered in the circle if they are merely touching
+	@return whether the specified point lies in the specified circle (true) or not (false)
+	**/
+	ptInCircle(px,py,cx,cy, cr, includeTouching) {
+		if (includeTouching) {
+			return this.ptDist(px,py,cx,cy) <= cr;	
+		}
+		return this.ptDist(px,py,cx,cy) < cr;
+	}
+
+	/**
 	* get the angle between two points
 	* @param x1: the x coordinate of the first point
 	* @param y1: the y coordinate of the first point
@@ -473,6 +513,8 @@ export class GraphComponent implements OnInit {
 		this.updateNodes();
 		this.redrawScreen();
 		requestAnimationFrame(this.update.bind(this));
+		//reset 1-frame mouse events
+		this.mouseClicked = false;
 	}
 
 	/**
