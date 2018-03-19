@@ -94,13 +94,13 @@ export class GraphComponent implements OnInit {
 	private nodeRepelForce : number = 9;
 	private nodeRepelMaxDist : number = 40;
 
-	//mouse info
+	//mouse state
 	private mousePos : any = {x:-1,y:-1};
 	private mouseHeld : Boolean = false;
 	private mouseClicked : Boolean = false;
 
 	//test node data
-	private testNodes : any = [];
+	private testNodes : any = {};
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -113,8 +113,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes.push({x:100,y:100,state:"idle",name:"DS",col:0});
-		this.testNodes.push({x:150,y:200,state:"idle",name:"CS1",col:0});
+		this.testNodes["1"] = {x:100,y:100,state:"idle",name:"DS",col:0};
+		this.testNodes["2"] = {x:150,y:200,state:"idle",name:"CS1",col:0};
 	}
 
 	/**
@@ -390,22 +390,24 @@ export class GraphComponent implements OnInit {
 	drawNodes() {
 		//first draw node bodies
 		this.ctx.lineWidth = this.nodeStrokeWidth;
-		for (let i : number = 0; i < this.testNodes.length; ++i) {
+		Object.keys(this.testNodes).forEach(function (key) {
+			let curNode : any = this.testNodes[key];
 			this.ctx.beginPath();
-			this.ctx.arc(this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,0,2*Math.PI);
-			this.ctx.strokeStyle = this.testNodes[i].state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
-			this.ctx.fillStyle = this.testNodes[i].state == "hover" ? this.nodeHoverColor : this.nodeColor;
+			this.ctx.arc(curNode.x,curNode.y,this.nodeRadius,0,2*Math.PI);
+			this.ctx.strokeStyle = curNode.state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
+			this.ctx.fillStyle = curNode.state == "hover" ? this.nodeHoverColor : this.nodeColor;
 			this.ctx.fill();
 			this.ctx.stroke();
-		}
+		});
 
 		//next draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
 		this.ctx.fillStyle = this.nodeLabelColor;
-		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			let labelWidth = this.ctx.measureText(this.testNodes[i].name).width;
-			this.ctx.fillText(this.testNodes[i].name,this.testNodes[i].x - labelWidth/2,this.testNodes[i].y - this.nodeRadius - this.nodeLabelFontSize/2);
-		}
+		Object.keys(this.testNodes).forEach(function (key) {
+			let curNode : any = this.testNodes[key];
+			let labelWidth = this.ctx.measureText(curNode.name).width;
+			this.ctx.fillText(curNode.name,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
+		});
 	}
 
 	/**
@@ -432,61 +434,62 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		//first pass: move dragged node
-		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			if (this.testNodes[i].state == "drag") {
+		Object.keys(this.testNodes).forEach(function (key) {
+			let curNode : any = this.testNodes[key];
+			if (curNode.state == "drag") {
 				if (!this.mouseHeld) {
-					this.testNodes[i].state = "idle";
+					curNode.state = "idle";
 
 					//we just released this node; place it in the nearest column
-					this.moveToNearestColumn(this.testNodes[i]);
+					this.moveToNearestColumn(curNode);
 
 				}
 				else {
 					//move to mouse
-					this.testNodes[i].x = this.mousePos.x;
-					this.testNodes[i].y = this.mousePos.y;
+					curNode.x = this.mousePos.x;
+					curNode.y = this.mousePos.y;
 				}
 				break;
 			}
-		}
+		});
 
 		//second pass: move non-dragged nodes
-		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			if (this.testNodes[i].state == "drag") {
+		Object.keys(this.testNodes).forEach(function (key) {
+			let curNode : any = this.testNodes[key];
+			if (curNode.state == "drag") {
 				continue;
 			}
 
 			//check if hovering
-			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,true)) {
-				this.testNodes[i].state = "hover";
+			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,curNode.x,this.curNode.y,this.nodeRadius,true)) {
+				curNode.state = "hover";
 			}
 			else {
-				this.testNodes[i].state = "idle";
+				curNode.state = "idle";
 			}
 
-			//check if should drag
-			if (this.testNodes[i].state == "hover") {
+			//check if should begin dragging
+			if (curNode.state == "hover") {
 				if (this.mouseClicked) {
-					this.testNodes[i].state = "drag";
-					--i;
-					continue;
+					curNode.state = "drag";
 				}
 			}
 
-			let x1 = this.testNodes[i].x;
-			let y1 = this.testNodes[i].y;
-			for (let r : number = 0; r < this.testNodes.length; ++r) {
+			let x1 = curNode.x;
+			let y1 = curNode.y;
+			Object.keys(this.testNodes).forEach(function (key2) {
+			let nextNode : any = this.testNodes[key2];
 				//don't affect self
-				if (r == i) {
+				if (curNode == nextNode) {
 					continue;
 				}
 
 				//don't attract across columns
-				if (this.testNodes[r].col != this.testNodes[i].col) {
+				if (nextNode.col != nextNode.col) {
 					continue;
 				}
-				let x2 = this.testNodes[r].x;
-				let y2 = this.testNodes[r].y;
+				let x2 = nextNode.x;
+				let y2 = nextNode.y;
 				let dist = this.ptDist(x1,y1,x2,y2);
 
 				//first bump out any collisions
@@ -494,8 +497,8 @@ export class GraphComponent implements OnInit {
 					let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius - dist);
 					x2 = newPos[0];
 					y2 = newPos[1];
-					this.testNodes[r].x = x2;
-					this.testNodes[r].y = y2;
+					nextNode.x = x2;
+					nextNode.y = y2;
 				}
 				dist = this.ptDist(x1,y1,x2,y2);
 
@@ -511,18 +514,19 @@ export class GraphComponent implements OnInit {
 					x1 = newPos[0];
 					y1 = newPos[1];
 				}
-			}
-			this.testNodes[i].x = x1;
-			this.testNodes[i].y = y1;
-		}
+			});
+			curNode.x = x1;
+			curNode.y = y1;
+		});
 
 		//keep nodes within columns, unless they are being dragged
-		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			if (this.testNodes[i].state == "drag") {
+		Object.keys(this.testNodes).forEach(function (key) {
+			let curNode : any = this.testNodes[key];
+			if (curNode.state == "drag") {
 				continue;
 			}
-			this.keepNodeInColumn(this.testNodes[i]);
-		}
+			this.keepNodeInColumn(curNode);
+		});
 	}
 
 	/**
