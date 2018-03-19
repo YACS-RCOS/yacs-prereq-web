@@ -6,7 +6,8 @@ import {
 	AfterViewInit,
 	ElementRef,
 	Input,
-	ViewEncapsulation
+	ViewEncapsulation,
+	HostListener
 } from '@angular/core';
 import * as d3 from 'd3';
 
@@ -20,6 +21,12 @@ export class GraphComponent implements OnInit {
 	@Input() private data: Array < any > ;
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
+	
+	@HostListener('document:mousemove', ['$event']) 
+	onMouseMove(e) {
+		console.log(this.getMouseDocument(e,this.cnv));
+		console.log(this.testNodes[0]);
+	}
 	//dictionary of 'name' : 'node' for easy node access during graph construction
 	private nodeDict: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
@@ -70,7 +77,7 @@ export class GraphComponent implements OnInit {
 
 	//forces strength
 	private nodeAttractionForce : number = .5;
-	private nodeRepelForce : number = 8;
+	private nodeRepelForce : number = 7;
 	private nodeRepelMaxDist : number = 50;
 
 	//test node data
@@ -87,8 +94,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes.push([100,100]);
-		this.testNodes.push([150,200]);
+		this.testNodes.push({x:100,y:100,dragging:false});
+		//this.testNodes.push({x:150,y:200,dragging:false});
 	}
 
 	/**
@@ -352,7 +359,7 @@ export class GraphComponent implements OnInit {
 		this.ctx.fillStyle = this.nodeColor;
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
 			this.ctx.beginPath();
-			this.ctx.arc(this.testNodes[i][0],this.testNodes[i][1],this.nodeRadius,0,2*Math.PI);
+			this.ctx.arc(this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,0,2*Math.PI);
 			this.ctx.fill();
 			this.ctx.stroke();
 		}
@@ -382,15 +389,18 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			let x1 = this.testNodes[i][0];
-			let y1 = this.testNodes[i][1];
+			if (this.testNodes[i].dragging) {
+				
+			}
+			let x1 = this.testNodes[i].x;
+			let y1 = this.testNodes[i].y;
 			for (let r : number = 0; r < this.testNodes.length; ++r) {
 				//don't affect self
 				if (r == i) {
 					continue;
 				}
-				let x2 = this.testNodes[r][0];
-				let y2 = this.testNodes[r][1];
+				let x2 = this.testNodes[r].x;
+				let y2 = this.testNodes[r].y;
 				let dist = this.ptDist(x1,y1,x2,y2);
 
 				//first attract
@@ -406,8 +416,8 @@ export class GraphComponent implements OnInit {
 					y1 = newPos[1];
 				}
 			}
-			this.testNodes[i][0] = x1;
-			this.testNodes[i][1] = y1;
+			this.testNodes[i].x = x1;
+			this.testNodes[i].y = y1;
 		}
 	}
 
@@ -519,5 +529,17 @@ export class GraphComponent implements OnInit {
 	  	ctx.strokeStyle = strokeColor;
 	    ctx.stroke();
 	  }
+	  }
+
+	  /**
+	 * get the position of the mouse in the document
+	 * @param evt: the currently processing event
+	 * @param cnv: the canvas to check mouse position against
+	 * @returns an object containing the x,y coordinates of the mouse
+	 */
+	getMouseDocument(evt,cnv) {
+		var rect = cnv.getBoundingClientRect();
+		return {x: evt.clientX - rect.left, y: evt.clientY - rect.top};	
 	}
+
 }
