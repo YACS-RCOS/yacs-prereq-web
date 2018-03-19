@@ -339,13 +339,28 @@ export class GraphComponent implements OnInit {
 	@param node: the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
-		var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
+		//base case: if we release a node past the left side of the screen, return it to column 0
+		if (node.x < 0) {
+			node.col = 0;
+		}
+		else {
+			let colNum = -1;
+			let colBounds = null;
+			while (colBounds == null || node.x > colBounds.min - this.colHalfSpace) {
+				colBounds = this.calculateColumnBounds(++colNum);
+			}
+			node.col = colNum-1;
+		}
+
+
+
+		/*var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
 		var startColumn = node.column;
 		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
 		while (startColumn != desiredColumn) {
 			startColumn += (startColumn > desiredColumn ? -1 : 1);
 			this.layoutFromNode(node,startColumn,true);
-		}
+		}*/
 	}
   
 	/**
@@ -421,6 +436,10 @@ export class GraphComponent implements OnInit {
 			if (this.testNodes[i].state == "drag") {
 				if (!this.mouseHeld) {
 					this.testNodes[i].state = "idle";
+
+					//we just released this node; place it in the nearest column
+					this.moveToNearestColumn(this.testNodes[i]);
+
 				}
 				else {
 					//move to mouse
@@ -461,6 +480,11 @@ export class GraphComponent implements OnInit {
 				if (r == i) {
 					continue;
 				}
+
+				//don't attract across columns
+				if (this.testNodes[r].col != this.testNodes[i].col) {
+					continue;
+				}
 				let x2 = this.testNodes[r].x;
 				let y2 = this.testNodes[r].y;
 				let dist = this.ptDist(x1,y1,x2,y2);
@@ -497,27 +521,46 @@ export class GraphComponent implements OnInit {
 			if (this.testNodes[i].state == "drag") {
 				continue;
 			}
-			//x bounds
-			let colXMin = this.testNodes[i].col*this.colWidth + this.colHalfSpace;
-			let colXMax = colXMin + this.colWidth - 2 * this.colHalfSpace;
-
-			if (this.testNodes[i].x - this.nodeRadius < colXMin) {
-				this.testNodes[i].x = colXMin + this.nodeRadius;
-			}
-
-			if (this.testNodes[i].x + this.nodeRadius > colXMax) {
-				this.testNodes[i].x = colXMax - this.nodeRadius;
-			}
-
-			//y bounds
-			if (this.testNodes[i].y - this.nodeRadius < 0) {
-				this.testNodes[i].y = this.nodeRadius;
-			}
-
-			if (this.testNodes[i].y + this.nodeRadius > this.svgHeight) {
-				this.testNodes[i].y = this.svgHeight - this.nodeRadius;
-			}
+			this.keepNodeInColumn(this.testNodes[i]);
 		}
+	}
+
+	/**
+	keep the specified node within its column bounds
+	@param {any} node: the node we wish to keep in its column bounds
+	**/
+	keepNodeInColumn(node) {
+		//x bounds
+		let colBounds = this.calculateColumnBounds(node.col);
+
+		if (node.x - this.nodeRadius < colBounds.min) {
+			node.x = colBounds.min + this.nodeRadius;
+		}
+
+		if (node.x + this.nodeRadius > colBounds.max) {
+			node.x = colBounds.max - this.nodeRadius;
+		}
+
+		//y bounds
+		if (node.y - this.nodeRadius < 0) {
+			node.y = this.nodeRadius;
+		}
+
+		if (node.y + this.nodeRadius > this.svgHeight) {
+			node.y = this.svgHeight - this.nodeRadius;
+		}
+	}
+
+
+	/**
+	calculate the horizontal bounds of the specified column number
+	@param {number} colNum the column number whose bounds we wish to calculate
+	@return an object containing the min and max x coordinates of the specified column
+	**/ 
+	calculateColumnBounds(colNum) {
+		let colXMin = colNum*this.colWidth + this.colHalfSpace;
+		let colXMax = colXMin + this.colWidth - 2 * this.colHalfSpace;
+		return {"min":colXMin,"max":colXMax};
 	}
 
 	/**
