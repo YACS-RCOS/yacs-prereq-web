@@ -111,8 +111,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes.push({x:100,y:100,state:"idle"});
-		this.testNodes.push({x:150,y:200,state:"idle"});
+		this.testNodes.push({x:100,y:100,state:"idle",name:"DS"});
+		this.testNodes.push({x:150,y:200,state:"idle",name:"CS1"});
 	}
 
 	/**
@@ -405,6 +405,7 @@ export class GraphComponent implements OnInit {
 	update all node objects
 	**/
 	updateNodes() {
+		//first pass: move dragged node
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
 			if (this.testNodes[i].state == "drag") {
 				if (!this.mouseHeld) {
@@ -414,8 +415,15 @@ export class GraphComponent implements OnInit {
 					//move to mouse
 					this.testNodes[i].x = this.mousePos.x;
 					this.testNodes[i].y = this.mousePos.y;
-					continue;
 				}
+				break;
+			}
+		}
+
+		//second pass: move non-dragged nodes
+		for (let i : number = 0; i < this.testNodes.length; ++i) {
+			if (this.testNodes[i].state == "drag") {
+				continue;
 			}
 
 			//check if hovering
