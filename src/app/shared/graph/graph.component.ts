@@ -65,10 +65,15 @@ export class GraphComponent implements OnInit {
 	private columnBackgroundColor : any = "rgba(200,200,200,1)";
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
-
 	private nodeColor : any = "rgba(255,100,100,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
 
+	//forces strength
+	private nodeAttractionForce : number = .5;
+	private nodeRepelForce : number = 8;
+	private nodeRepelMaxDist : number = 50;
+
+	//test node data
 	private testNodes : any = [];
 
 	/**
@@ -325,6 +330,7 @@ export class GraphComponent implements OnInit {
 	}
 
 	redrawScreen() {
+		this.clearScreen();
 		this.drawSemesterColumns();
 		this.drawNodes();
 	}
@@ -376,9 +382,79 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			
+			let x1 = this.testNodes[i][0];
+			let y1 = this.testNodes[i][1];
+			for (let r : number = 0; r < this.testNodes.length; ++r) {
+				//don't affect self
+				if (r == i) {
+					continue;
+				}
+				let x2 = this.testNodes[r][0];
+				let y2 = this.testNodes[r][1];
+				let dist = this.ptDist(x1,y1,x2,y2);
+
+				//first attract
+				let newPos = this.applyForce(x1,y1,x2,y2, true, 100/dist);
+				x1 = newPos[0];
+				y1 = newPos[1];
+
+				dist = this.ptDist(x1,y1,x2,y2);
+				if (dist < this.nodeRepelMaxDist) {
+					//we are withing range of node r, so repel
+					let newPos = this.applyForce(x1,y1,x2,y2, false, this.nodeRepelForce * ((this.nodeRepelMaxDist - dist) / this.nodeRepelMaxDist));
+					x1 = newPos[0];
+					y1 = newPos[1];
+				}
+			}
+			this.testNodes[i][0] = x1;
+			this.testNodes[i][1] = y1;
 		}
 	}
+
+	/**
+	apply a force to position x1,y1 from direction of x2,y2 given strength
+	@param {number} x1 the first x coordinate
+	@param {number} y1 the first y coordinate
+	@param {number} x2 the second x coordinate
+	@param {number} y2 the second y coordinate
+	@param {Boolean} isAttraction whether the force is an attraction force (true) or a repulsion force (false)
+	@param {number} strength how strong the force to apply is
+	@return a tuple containing the position of x1,y1 after force application
+	**/
+	applyForce(x1,y1,x2,y2,isAttraction,strength) {
+		let ang = this.ptAngle(x1,y1,x2,y2,true);
+		return[x1 + Math.cos(ang) * (isAttraction ? strength : -strength), y1 + Math.sin(ang) * (isAttraction ? strength : -strength)];
+	}
+
+	/**
+	calculate distance between specified points
+	@param {number} x1 the first x coordinate
+	@param {number} y1 the first y coordinate
+	@param {number} x2 the second x coordinate
+	@param {number} y2 the second y coordinate
+	@return the distance between points x1,y1 and x2,y2
+	**/
+	ptDist(x1,y1,x2,y2) {
+		return Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+	}
+
+	/**
+	* get the angle between two points
+	* @param x1: the x coordinate of the first point
+	* @param y1: the y coordinate of the first point
+	* @param x2: the x coordinate of the second point
+	* @param y2: the y coordinate of the second point
+	* @param radians: whether the angle is in radians (true) or degrees (false)
+	* @returns the angle between the two input points
+	*/
+
+ 	ptAngle(x1,y1,x2,y2,radians) {
+		if (radians == null || radians == false) {
+			return Math.atan2((y2-y1),(x2-x1))*180/Math.PI;
+		}
+		return Math.atan2((y2-y1),(x2-x1));
+	}
+
   
 	/**
 	graph update. Update node positions and constraints, followed by edge positions
