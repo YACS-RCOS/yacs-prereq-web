@@ -390,24 +390,28 @@ export class GraphComponent implements OnInit {
 	drawNodes() {
 		//first draw node bodies
 		this.ctx.lineWidth = this.nodeStrokeWidth;
-		Object.keys(this.testNodes).forEach(function (key) {
-			let curNode : any = this.testNodes[key];
-			this.ctx.beginPath();
-			this.ctx.arc(curNode.x,curNode.y,this.nodeRadius,0,2*Math.PI);
-			this.ctx.strokeStyle = curNode.state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
-			this.ctx.fillStyle = curNode.state == "hover" ? this.nodeHoverColor : this.nodeColor;
-			this.ctx.fill();
-			this.ctx.stroke();
-		});
+		for(var key in this.testNodes) { 
+   			if (this.testNodes.hasOwnProperty(key)) {
+				let curNode : any = this.testNodes[key];
+				this.ctx.beginPath();
+				this.ctx.arc(curNode.x,curNode.y,this.nodeRadius,0,2*Math.PI);
+				this.ctx.strokeStyle = curNode.state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
+				this.ctx.fillStyle = curNode.state == "hover" ? this.nodeHoverColor : this.nodeColor;
+				this.ctx.fill();
+				this.ctx.stroke();
+			}
+		}
 
 		//next draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
 		this.ctx.fillStyle = this.nodeLabelColor;
-		Object.keys(this.testNodes).forEach(function (key) {
-			let curNode : any = this.testNodes[key];
-			let labelWidth = this.ctx.measureText(curNode.name).width;
-			this.ctx.fillText(curNode.name,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
-		});
+		for(var key in this.testNodes) { 
+   			if (this.testNodes.hasOwnProperty(key)) {
+				let curNode : any = this.testNodes[key];
+				let labelWidth = this.ctx.measureText(curNode.name).width;
+				this.ctx.fillText(curNode.name,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
+			}
+		}
 	}
 
 	/**
@@ -434,99 +438,107 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		//first pass: move dragged node
-		Object.keys(this.testNodes).forEach(function (key) {
-			let curNode : any = this.testNodes[key];
-			if (curNode.state == "drag") {
-				if (!this.mouseHeld) {
-					curNode.state = "idle";
+		for(var key in this.testNodes) { 
+   			if (this.testNodes.hasOwnProperty(key)) {
+				let curNode : any = this.testNodes[key];
+				if (curNode.state == "drag") {
+					if (!this.mouseHeld) {
+						curNode.state = "idle";
 
-					//we just released this node; place it in the nearest column
-					this.moveToNearestColumn(curNode);
+						//we just released this node; place it in the nearest column
+						this.moveToNearestColumn(curNode);
 
+					}
+					else {
+						//move to mouse
+						curNode.x = this.mousePos.x;
+						curNode.y = this.mousePos.y;
+					}
+					break;
 				}
-				else {
-					//move to mouse
-					curNode.x = this.mousePos.x;
-					curNode.y = this.mousePos.y;
-				}
-				break;
 			}
-		});
+		}
 
 		//second pass: move non-dragged nodes
-		Object.keys(this.testNodes).forEach(function (key) {
-			let curNode : any = this.testNodes[key];
-			if (curNode.state == "drag") {
-				continue;
-			}
-
-			//check if hovering
-			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,curNode.x,this.curNode.y,this.nodeRadius,true)) {
-				curNode.state = "hover";
-			}
-			else {
-				curNode.state = "idle";
-			}
-
-			//check if should begin dragging
-			if (curNode.state == "hover") {
-				if (this.mouseClicked) {
-					curNode.state = "drag";
-				}
-			}
-
-			let x1 = curNode.x;
-			let y1 = curNode.y;
-			Object.keys(this.testNodes).forEach(function (key2) {
-			let nextNode : any = this.testNodes[key2];
-				//don't affect self
-				if (curNode == nextNode) {
+		for(var key in this.testNodes) { 
+   			if (this.testNodes.hasOwnProperty(key)) {
+				let curNode : any = this.testNodes[key];
+				if (curNode.state == "drag") {
 					continue;
 				}
 
-				//don't attract across columns
-				if (nextNode.col != nextNode.col) {
-					continue;
+				//check if hovering
+				if (this.ptInCircle(this.mousePos.x,this.mousePos.y,curNode.x,curNode.y,this.nodeRadius,true)) {
+					curNode.state = "hover";
 				}
-				let x2 = nextNode.x;
-				let y2 = nextNode.y;
-				let dist = this.ptDist(x1,y1,x2,y2);
-
-				//first bump out any collisions
-				if (dist < 2*this.nodeRadius) {
-					let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius - dist);
-					x2 = newPos[0];
-					y2 = newPos[1];
-					nextNode.x = x2;
-					nextNode.y = y2;
+				else {
+					curNode.state = "idle";
 				}
-				dist = this.ptDist(x1,y1,x2,y2);
 
-				//next attract
-				let newPos = this.applyForce(x1,y1,x2,y2, true, this.nodeAttractionForce * 100/dist);
-				x1 = newPos[0];
-				y1 = newPos[1];
-
-				dist = this.ptDist(x1,y1,x2,y2);
-				if (dist < this.nodeRepelMaxDist) {
-					//we are withing range of node r, so repel
-					let newPos = this.applyForce(x1,y1,x2,y2, false, this.nodeRepelForce * ((this.nodeRepelMaxDist - dist) / this.nodeRepelMaxDist));
-					x1 = newPos[0];
-					y1 = newPos[1];
+				//check if should begin dragging
+				if (curNode.state == "hover") {
+					if (this.mouseClicked) {
+						curNode.state = "drag";
+					}
 				}
-			});
-			curNode.x = x1;
-			curNode.y = y1;
-		});
+
+				let x1 = curNode.x;
+				let y1 = curNode.y;
+				for(var key2 in this.testNodes) { 
+   					if (this.testNodes.hasOwnProperty(key2)) {
+						let nextNode : any = this.testNodes[key2];
+						//don't affect self
+						if (curNode == nextNode) {
+							continue;
+						}
+
+						//don't attract across columns
+						if (curNode.col != nextNode.col) {
+							continue;
+						}
+						let x2 = nextNode.x;
+						let y2 = nextNode.y;
+						let dist = this.ptDist(x1,y1,x2,y2);
+
+						//first bump out any collisions
+						if (dist < 2*this.nodeRadius) {
+							let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius - dist);
+							x2 = newPos[0];
+							y2 = newPos[1];
+							nextNode.x = x2;
+							nextNode.y = y2;
+						}
+						dist = this.ptDist(x1,y1,x2,y2);
+
+						//next attract
+						let newPos = this.applyForce(x1,y1,x2,y2, true, this.nodeAttractionForce * 100/dist);
+						x1 = newPos[0];
+						y1 = newPos[1];
+
+						dist = this.ptDist(x1,y1,x2,y2);
+						if (dist < this.nodeRepelMaxDist) {
+							//we are withing range of node r, so repel
+							let newPos = this.applyForce(x1,y1,x2,y2, false, this.nodeRepelForce * ((this.nodeRepelMaxDist - dist) / this.nodeRepelMaxDist));
+							x1 = newPos[0];
+							y1 = newPos[1];
+						}
+					}
+				}
+				curNode.x = x1;
+				curNode.y = y1;
+			}
+		}
 
 		//keep nodes within columns, unless they are being dragged
-		Object.keys(this.testNodes).forEach(function (key) {
-			let curNode : any = this.testNodes[key];
-			if (curNode.state == "drag") {
-				continue;
+		for(var key in this.testNodes) { 
+   			if (this.testNodes.hasOwnProperty(key)) {
+				let curNode : any = this.testNodes[key];
+				if (curNode.state == "drag") {
+					continue;
+				}
+				this.keepNodeInColumn(curNode);
 			}
-			this.keepNodeInColumn(curNode);
-		});
+		}
 	}
 
 	/**
