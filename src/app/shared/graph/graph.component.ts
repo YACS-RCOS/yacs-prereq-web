@@ -33,8 +33,14 @@ export class GraphComponent implements OnInit {
 	private svgWidth : number = 1580;
 	private svgHeight : number = 600;
 
+	//height of column graphic
+	private colHeight : number = this.svgHeight - 2;
+
 	//width of column contained area
 	private colWidth : number = 195;
+
+	//width of space between columns (subtracted from colWidth)
+	private colHalfSpace : number = 20;
 
 	//data structures handling graph nodes and links; defined below
 	private node : any;
@@ -56,7 +62,9 @@ export class GraphComponent implements OnInit {
 	
 	//visual style 
 	private bgColor : any = "rgba(255,255,255,1)";
-	private columnColor : any = "rgba(200,200,200,1)";
+	private columnBackgroundColor : any = "rgba(200,200,200,1)";
+	private columnStrokeColor : any = "rgba(150,150,150,1)";
+	private columnStrokeWidth : number = 1;
 
 	//framerate
 	fps = 60;
@@ -317,23 +325,24 @@ export class GraphComponent implements OnInit {
 		}*/
 	}
 
+	/**
+	clear the screen to the set background color
+	**/
 	clearScreen() {
 		this.ctx.fillStyle=this.bgColor;
 		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
 	}
 
+	/**
+	draw columns specifying semester locations
+	**/
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
 			let columnXMin = i*this.colWidth;
-			this.ctx.fillStyle	= this.columnColor;
-			this.ctx.fillRect(columnXMin + 20, 0, this.colWidth - 20, this.svgHeight);
+			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.svgHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace, this.colHeight,
+				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
 		}
 
-	}
-
-	ngOnTick() {
-		console.log("updating");
-		this.redrawScreen();
 	}
   
 	/**
@@ -344,6 +353,59 @@ export class GraphComponent implements OnInit {
 		requestAnimationFrame(this.update.bind(this));
 	}
 
-	//_intervalId = setInterval(this.update, 1000 / this.fps);
-	//_intervalId = setInterval(function(){this.update();}, 1000 / this.fps);
+	/**
+	 * Draws a rounded rectangle using the current state of the canvas.
+	 * If you omit the last three params, it will draw a rectangle
+	 * outline with a 5 pixel border radius
+	 * taken from: https://stackoverflow.com/a/3368118
+	 * @param {CanvasRenderingContext2D} ctx
+	 * @param {Number} x The top left x coordinate
+	 * @param {Number} y The top left y coordinate
+	 * @param {Number} width The width of the rectangle
+	 * @param {Number} height The height of the rectangle
+	 * @param {Number} [radius = 5] The corner radius; It can also be an object 
+	 *                 to specify different radii for corners
+	 * @param {Number} [radius.tl = 0] Top left
+	 * @param {Number} [radius.tr = 0] Top right
+	 * @param {Number} [radius.br = 0] Bottom right
+	 * @param {Number} [radius.bl = 0] Bottom left
+	 * @param {Boolean} [fill = false] Whether to fill the rectangle.
+	 * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+	 **/
+	 roundRect(ctx, x, y, width, height, fillColor, strokeColor, strokeWidth, radius, fill, stroke) {
+	  if (typeof stroke == 'undefined') {
+	    stroke = true;
+	  }
+	  if (typeof radius === 'undefined') {
+	    radius = 5;
+	  }
+	  if (typeof radius === 'number') {
+	    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+	  } else {
+	    var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+	    for (var side in defaultRadius) {
+	      radius[side] = radius[side] || defaultRadius[side];
+	    }
+	  }
+	  ctx.beginPath();
+	  ctx.moveTo(x + radius.tl, y);
+	  ctx.lineTo(x + width - radius.tr, y);
+	  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+	  ctx.lineTo(x + width, y + height - radius.br);
+	  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+	  ctx.lineTo(x + radius.bl, y + height);
+	  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+	  ctx.lineTo(x, y + radius.tl);
+	  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+	  ctx.closePath();
+	  if (fill) {
+	  	ctx.fillStyle = fillColor;
+	    ctx.fill();
+	  }
+	  if (stroke) {
+	  	ctx.lineWidth = strokeWidth;
+	  	ctx.strokeStyle = strokeColor;
+	    ctx.stroke();
+	  }
+	}
 }
