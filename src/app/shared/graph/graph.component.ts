@@ -88,9 +88,9 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
 
 	//forces strength
-	private nodeAttractionForce : number = .5;
-	private nodeRepelForce : number = 7;
-	private nodeRepelMaxDist : number = 50;
+	private nodeAttractionForce : number = .95;
+	private nodeRepelForce : number = 9;
+	private nodeRepelMaxDist : number = 40;
 
 	//mouse info
 	private mousePos : any = {x:-1,y:-1};
@@ -446,8 +446,18 @@ export class GraphComponent implements OnInit {
 				let y2 = this.testNodes[r].y;
 				let dist = this.ptDist(x1,y1,x2,y2);
 
-				//first attract
-				let newPos = this.applyForce(x1,y1,x2,y2, true, 100/dist);
+				//first bump out any collisions
+				if (dist < 2*this.nodeRadius) {
+					let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius - dist);
+					x2 = newPos[0];
+					y2 = newPos[1];
+					this.testNodes[r].x = x2;
+					this.testNodes[r].y = y2;
+				}
+				dist = this.ptDist(x1,y1,x2,y2);
+
+				//next attract
+				let newPos = this.applyForce(x1,y1,x2,y2, true, this.nodeAttractionForce * 100/dist);
 				x1 = newPos[0];
 				y1 = newPos[1];
 
