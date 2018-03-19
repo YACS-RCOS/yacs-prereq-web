@@ -406,15 +406,35 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
-			//check if hovering
-			if (this.testNodes[i].state != "drag") {
-				if (this.ptInCircle(this.mousePos.x,this.mousePos.y,this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,true)) {
-					this.testNodes[i].state = "hover";
-				}
-				else {
+			if (this.testNodes[i].state == "drag") {
+				if (!this.mouseHeld) {
 					this.testNodes[i].state = "idle";
 				}
+				else {
+					//move to mouse
+					this.testNodes[i].x = this.mousePos.x;
+					this.testNodes[i].y = this.mousePos.y;
+					continue;
+				}
 			}
+
+			//check if hovering
+			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,this.testNodes[i].x,this.testNodes[i].y,this.nodeRadius,true)) {
+				this.testNodes[i].state = "hover";
+			}
+			else {
+				this.testNodes[i].state = "idle";
+			}
+
+			//check if should drag
+			if (this.testNodes[i].state == "hover") {
+				if (this.mouseClicked) {
+					this.testNodes[i].state = "drag";
+					--i;
+					continue;
+				}
+			}
+
 			let x1 = this.testNodes[i].x;
 			let y1 = this.testNodes[i].y;
 			for (let r : number = 0; r < this.testNodes.length; ++r) {
