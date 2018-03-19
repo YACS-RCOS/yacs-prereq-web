@@ -113,8 +113,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes.push({x:100,y:100,state:"idle",name:"DS"});
-		this.testNodes.push({x:150,y:200,state:"idle",name:"CS1"});
+		this.testNodes.push({x:100,y:100,state:"idle",name:"DS",col:0});
+		this.testNodes.push({x:150,y:200,state:"idle",name:"CS1",col:0});
 	}
 
 	/**
@@ -406,7 +406,7 @@ export class GraphComponent implements OnInit {
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
 			let columnXMin = i*this.colWidth;
-			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.svgHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace, this.colHeight,
+			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.svgHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace*2, this.colHeight,
 				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
 		}
 
@@ -490,6 +490,33 @@ export class GraphComponent implements OnInit {
 			}
 			this.testNodes[i].x = x1;
 			this.testNodes[i].y = y1;
+		}
+
+		//keep nodes within columns, unless they are being dragged
+		for (let i : number = 0; i < this.testNodes.length; ++i) {
+			if (this.testNodes[i].state == "drag") {
+				continue;
+			}
+			//x bounds
+			let colXMin = this.testNodes[i].col*this.colWidth + this.colHalfSpace;
+			let colXMax = colXMin + this.colWidth - 2 * this.colHalfSpace;
+
+			if (this.testNodes[i].x - this.nodeRadius < colXMin) {
+				this.testNodes[i].x = colXMin + this.nodeRadius;
+			}
+
+			if (this.testNodes[i].x + this.nodeRadius > colXMax) {
+				this.testNodes[i].x = colXMax - this.nodeRadius;
+			}
+
+			//y bounds
+			if (this.testNodes[i].y - this.nodeRadius < 0) {
+				this.testNodes[i].y = this.nodeRadius;
+			}
+
+			if (this.testNodes[i].y + this.nodeRadius > this.svgHeight) {
+				this.testNodes[i].y = this.svgHeight - this.nodeRadius;
+			}
 		}
 	}
 
