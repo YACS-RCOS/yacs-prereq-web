@@ -86,6 +86,8 @@ export class GraphComponent implements OnInit {
 	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
 	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
+	private nodeLabelColor : any = "rgba(0,0,255,1)";
+	private nodeLabelFontSize : number = 12;
 
 	//forces strength
 	private nodeAttractionForce : number = .95;
@@ -371,6 +373,7 @@ export class GraphComponent implements OnInit {
 	draw all nodes
 	**/
 	drawNodes() {
+		//first draw node bodies
 		this.ctx.lineWidth = this.nodeStrokeWidth;
 		for (let i : number = 0; i < this.testNodes.length; ++i) {
 			this.ctx.beginPath();
@@ -379,6 +382,14 @@ export class GraphComponent implements OnInit {
 			this.ctx.fillStyle = this.testNodes[i].state == "hover" ? this.nodeHoverColor : this.nodeColor;
 			this.ctx.fill();
 			this.ctx.stroke();
+		}
+
+		//next draw node titles
+		this.ctx.font = this.nodeLabelFontSize + "px Arial";
+		this.ctx.fillStyle = this.nodeLabelColor;
+		for (let i : number = 0; i < this.testNodes.length; ++i) {
+			let labelWidth = this.ctx.measureText(this.testNodes[i].name).width;
+			this.ctx.fillText(this.testNodes[i].name,this.testNodes[i].x - labelWidth/2,this.testNodes[i].y - this.nodeRadius - this.nodeLabelFontSize/2);
 		}
 	}
 
