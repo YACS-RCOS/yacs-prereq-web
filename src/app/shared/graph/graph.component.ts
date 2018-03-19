@@ -66,8 +66,10 @@ export class GraphComponent implements OnInit {
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
 
-	//framerate
-	fps = 60;
+	private nodeColor : any = "rgba(255,100,100,1)";
+	private nodeStrokeColor : any = "rgba(240,75,75,1)";
+
+	private testNodes : any = [];
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -78,6 +80,10 @@ export class GraphComponent implements OnInit {
 		this.ctx = this.cnv.getContext("2d");
 		this.cnv.width = this.svgWidth;
 		this.cnv.height = this.svgHeight;
+
+		//create some test nodes
+		this.testNodes.push([100,100]);
+		this.testNodes.push([150,200]);
 	}
 
 	/**
@@ -320,9 +326,7 @@ export class GraphComponent implements OnInit {
 
 	redrawScreen() {
 		this.drawSemesterColumns();
-		/*for (var i : number = 0; i < this.nodes.length; ++i) {
-
-		}*/
+		this.drawNodes();
 	}
 
 	/**
@@ -331,6 +335,28 @@ export class GraphComponent implements OnInit {
 	clearScreen() {
 		this.ctx.fillStyle=this.bgColor;
 		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
+	}
+
+	/**
+	draw all nodes
+	**/
+	drawNodes() {
+		this.ctx.lineWidth = this.nodeStrokeWidth;
+		this.ctx.strokeStyle = this.nodeStrokeColor;
+		this.ctx.fillStyle = this.nodeColor;
+		for (let i : number = 0; i < this.testNodes.length; ++i) {
+			this.ctx.beginPath();
+			this.ctx.arc(this.testNodes[i][0],this.testNodes[i][1],this.nodeRadius,0,2*Math.PI);
+			this.ctx.fill();
+			this.ctx.stroke();
+		}
+	}
+
+	/**
+	draw all edges
+	**/
+	drawEdges() {
+
 	}
 
 	/**
@@ -344,11 +370,21 @@ export class GraphComponent implements OnInit {
 		}
 
 	}
+
+	/**
+	update all node objects
+	**/
+	updateNodes() {
+		for (let i : number = 0; i < this.testNodes.length; ++i) {
+			
+		}
+	}
   
 	/**
 	graph update. Update node positions and constraints, followed by edge positions
 	**/
 	update() {
+		this.updateNodes();
 		this.redrawScreen();
 		requestAnimationFrame(this.update.bind(this));
 	}
