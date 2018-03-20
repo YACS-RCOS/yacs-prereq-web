@@ -110,47 +110,43 @@ export class GraphComponent implements OnInit {
 		this.ctx = this.cnv.getContext("2d");
 		this.cnv.width = this.svgWidth;
 		this.cnv.height = this.svgHeight;
-
-		//create some test nodes
-		this.nodes["1"] = {x:100,y:100,state:"idle",name:"DS",column:0};
-		this.nodes["2"] = {x:150,y:200,state:"idle",name:"CS1",column:0};
 	}
 
 	/**
 	load in graph data from prereq file (hosted by data service)
 	**/
 	loadGraphData() {
-		// let baseThis = this;
-		// d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
-		// 	let nodeData = prereqs["CSCI_nodes"];
-		// 	let metaNodeData = prereqs["meta_nodes"];
+		let baseThis = this;
+		d3.json("http://localhost:3100/prereq/CSCI", function(prereqs) {
+			let nodeData = prereqs["CSCI_nodes"];
+			let metaNodeData = prereqs["meta_nodes"];
 
-		// 	//first construct meta-nodes as standard nodes depend on their existence for edge creation
-		// 	for (let metaNode of metaNodeData) {
-		// 		let circle = baseThis.addNode(metaNode.meta_uid,metaNode.contains);
-		// 	}
+			//first construct meta-nodes as standard nodes depend on their existence for edge creation
+			for (let metaNode of metaNodeData) {
+				let circle = baseThis.addNode(metaNode.meta_uid,metaNode.contains);
+			}
 
-		// 	//construct graph nodes
-		// 	for (let node of nodeData) {
-		// 		let circle = baseThis.addNode(node.course_uid,null);
+			//construct graph nodes
+			for (let node of nodeData) {
+				let circle = baseThis.addNode(node.course_uid,null);
 
-		// 		//construct edges based off of this node's prereqs and coreqs
-		// 		let hasValidEdge = false;
-		// 		for (let edge of node.prereq_formula) {
-		// 			hasValidEdge = baseThis.addEdge(circle,baseThis.nodes[edge],"prereq") || hasValidEdge;
-		// 		}
-		// 		for (let edge of node.coreq_formula) {
-		// 			baseThis.addEdge(circle,baseThis.nodes[edge],"coreq");
-		// 		}
-		// 		//start at column 0 if we have no prereqs or our prereqs are not in the dataset
-		// 		if (node.prereq_formula.length == 0 || !hasValidEdge) {
-		// 			baseThis.setColNum(circle,0);
-		// 		}
-		// 	}
+				//construct edges based off of this node's prereqs and coreqs
+				let hasValidEdge = false;
+				for (let edge of node.prereq_formula) {
+					hasValidEdge = baseThis.addEdge(circle,baseThis.nodes[edge],"prereq") || hasValidEdge;
+				}
+				for (let edge of node.coreq_formula) {
+					baseThis.addEdge(circle,baseThis.nodes[edge],"coreq");
+				}
+				//start at column 0 if we have no prereqs or our prereqs are not in the dataset
+				if (node.prereq_formula.length == 0 || !hasValidEdge) {
+					baseThis.setColNum(circle,0);
+				}
+			}
 
-		// 	//layout standard nodes and edges
-		// 	baseThis.layoutColumns();
-		// });
+			//layout standard nodes and edges
+			baseThis.layoutColumns();
+		});
 
 		//begin the graph update loop
 		this.update();
@@ -163,11 +159,8 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		// this.graph.nodes.push({"id" : id, "active" : true, "locked" : false});
-		// this.nodes[id] = this.graph.nodes[this.graph.nodes.length - 1];
-		// this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
-		// this.graph.nodes[this.graph.nodes.length-1].column = -1;
-		// return this.nodes[id];
+		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":100};
+		return this.nodes[id];
 	}
 
 	/**
@@ -210,21 +203,21 @@ export class GraphComponent implements OnInit {
 	@param edgeType: the string type of the newly constructed edge (currently defaulting to "prereq")
 	**/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
-		// if (startNode && endNode) {
-		// 	this.graph.links.push({"source" : startNode.id,"target" : endNode.id, 
-		// 		"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType});
+		if (startNode && endNode) {
+			let newEdge = {"source" : startNode.id,"target" : endNode.id, 
+				"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType};
 
-		// 	if (!this.edges[startNode.id]) {
-		// 		this.edges[startNode.id] = [];
-		// 	}
-		// 	this.edges[startNode.id].push(this.graph.links[this.graph.links.length-1]);
-		// 	if (!this.edges[endNode.id]) {
-		// 		this.edges[endNode.id] = [];
-		// 	}
-		// 	this.edges[endNode.id].push(this.graph.links[this.graph.links.length-1]);
-		// 	return true;
-		// }
-		// return false;
+			if (!this.edges[startNode.id]) {
+				this.edges[startNode.id] = [];
+			}
+			this.edges[startNode.id].push(newEdge);
+			if (!this.edges[endNode.id]) {
+				this.edges[endNode.id] = [];
+			}
+			this.edges[endNode.id].push(newEdge);
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -407,8 +400,8 @@ export class GraphComponent implements OnInit {
 		for(var key in this.nodes) { 
    			if (this.nodes.hasOwnProperty(key)) {
 				let curNode : any = this.nodes[key];
-				let labelWidth = this.ctx.measureText(curNode.name).width;
-				this.ctx.fillText(curNode.name,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
+				let labelWidth = this.ctx.measureText(curNode.id).width;
+				this.ctx.fillText(curNode.id,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
 			}
 		}
 	}
