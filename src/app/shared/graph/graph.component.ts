@@ -91,6 +91,8 @@ export class GraphComponent implements OnInit {
 	private colWidth : number = 195;
 	//width of space between columns (subtracted from colWidth)
 	private colHalfSpace : number = 20;
+	private colLabelColor : any = "rgba(130,130,130,1)";
+	private colLabelFontSize : number = 18;
 
 	//~misc visuals~
 	private hiddenAlpha : number = .25;
@@ -112,6 +114,8 @@ export class GraphComponent implements OnInit {
 	private mouseHeldRight : Boolean = false;
 	private mouseClickedLeft : Boolean = false;
 	private mouseClickedRight : Boolean = false;
+	//semester names
+	private semesterNames : any = ["Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021", "Spring 2022"];
 
 	//forces definition
 	private nodeAttractionForce : number = .95;
@@ -435,9 +439,17 @@ export class GraphComponent implements OnInit {
 	**/
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
+			//draw column rect
 			let columnXMin = i*this.colWidth;
 			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.graphHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace*2, this.colHeight,
 				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
+
+			//draw column title
+			this.ctx.font = this.colLabelFontSize + "px Arial";
+			let labelWidth = this.ctx.measureText(this.semesterNames[i]).width;
+			this.ctx.fillStyle = this.colLabelColor;
+			this.ctx.fillText(this.semesterNames[i],columnXMin + this.colHalfSpace + (this.colWidth - this.colHalfSpace*2)/2 - labelWidth/2,
+				(this.graphHeight - this.colHeight)/2 + this.colLabelFontSize);
 		}
 
 	}
