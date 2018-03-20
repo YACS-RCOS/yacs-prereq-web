@@ -171,9 +171,9 @@ export class GraphComponent implements OnInit {
 
 	/**
 	add a node to the graph, and store it in our nodes. Column defaults to -1 to indicate that it has not yet been placed
-	@param id: the string id which corresponds to the newly added node
-	@param containedNodeIDs: list of string ids corresponding to nodes to which this node branches
-	@returns a reference to the newly constructed node in our nodes
+	@param {string} id the string id which corresponds to the newly added node
+	@param {any} containedNodeIDs list of string ids corresponding to nodes to which this node branches
+	@return {any} a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
 		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":Math.random()*this.graphHeight};
@@ -182,7 +182,7 @@ export class GraphComponent implements OnInit {
 
 	/**
 	locks the specified node, disallowing it from changing columns
-	@param id: the string id of the node to hide
+	@param {string} id the string id of the node to hide
 	**/
 	lockNode(id:string) {
 		this.nodes[id].locked = true;
@@ -190,7 +190,7 @@ export class GraphComponent implements OnInit {
 
 	/**
 	hide the specified node, removing it from the graph and setting it to inactive
-	@param id: the string id of the node to hide
+	@param {string} id the string id of the node to hide
 	**/
 	hideNode(id:string) {
 		this.nodes[id].hidden = true;
@@ -198,9 +198,9 @@ export class GraphComponent implements OnInit {
 
 	/**
 	add an edge to the graph, and store it in our edge dict. Edge gets placed as a connection from both its start node and its end node
-	@param startNode: the initial node forming this edge
-	@param endNode: the final node to which this edge connects
-	@param edgeType: the string type of the newly constructed edge (currently defaulting to "prereq")
+	@param {any} startNode the initial node forming this edge
+	@param {any} endNode the final node to which this edge connects
+	@param {any} edgeType the string type of the newly constructed edge (currently defaulting to "prereq")
 	**/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
@@ -249,9 +249,9 @@ export class GraphComponent implements OnInit {
 
 	/**
 	layout nodes stemming from current node
-	@param node: the node from which to recursively layout the rest of our graph
-	@param colNum: the column number of the current node
-	@param allowOverride: whether or not we should allow column overriding while laying out nodes
+	@param {any} node the node from which to recursively layout the rest of our graph
+	@param {number} colNum the column number of the current node
+	@param {Boolean} allowOverride whether or not we should allow column overriding while laying out nodes
 	**/
 	layoutFromNode(node : any, colNum : number, allowOverride : boolean = false) {
 		if (node.column != colNum) {
@@ -271,8 +271,8 @@ export class GraphComponent implements OnInit {
 
 	/**
 	find the largest column number contained by any of the specified node's dependencies
-	@param node: the node whose dependencies we wish to check
-	@returns the largest column number of any of the specified node's dependency nodes
+	@param {any} node the node whose dependencies we wish to check
+	@return {number} the largest column number of any of the specified node's dependency nodes
 	*/
 	nodeLargestColumnDependency(node : any) {
 		var maxCol = 0;
@@ -335,7 +335,7 @@ export class GraphComponent implements OnInit {
 
 	/**
 	move node into the nearest column (to be called upon drag end)
-	@param node: the node which we wish to snap to the colum nearest to its position
+	@param {any} node the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
 		//base case: if we release a node past the left side of the screen, return it to column 0
@@ -548,7 +548,7 @@ export class GraphComponent implements OnInit {
 
 	/**
 	keep the specified node within its column bounds
-	@param {any} node: the node we wish to keep in its column bounds
+	@param {any} node the node we wish to keep in its column bounds
 	**/
 	keepNodeInColumn(node) {
 		//x bounds
@@ -576,7 +576,7 @@ export class GraphComponent implements OnInit {
 	/**
 	calculate the horizontal bounds of the specified column number
 	@param {number} colNum the column number whose bounds we wish to calculate
-	@return an object containing the min and max x coordinates of the specified column
+	@return {any} an object containing the min and max x coordinates of the specified column
 	**/ 
 	calculateColumnBounds(colNum) {
 		let colXMin = colNum*this.colWidth + this.colHalfSpace;
@@ -592,7 +592,7 @@ export class GraphComponent implements OnInit {
 	@param {number} y2 the second y coordinate
 	@param {Boolean} isAttraction whether the force is an attraction force (true) or a repulsion force (false)
 	@param {number} strength how strong the force to apply is
-	@return a tuple containing the position of x1,y1 after force application
+	@return {any} a tuple containing the position of x1,y1 after force application
 	**/
 	applyForce(x1,y1,x2,y2,isAttraction,strength) {
 		let ang = this.ptAngle(x1,y1,x2,y2,true);
@@ -605,7 +605,7 @@ export class GraphComponent implements OnInit {
 	@param {number} y1 the first y coordinate
 	@param {number} x2 the second x coordinate
 	@param {number} y2 the second y coordinate
-	@return the distance between points x1,y1 and x2,y2
+	@return {number} the distance between points x1,y1 and x2,y2
 	**/
 	ptDist(x1,y1,x2,y2) {
 		return Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
@@ -619,7 +619,7 @@ export class GraphComponent implements OnInit {
 	@param {number} cy the center y coordinate of the circle
 	@param {number} cr the radius of the circle
 	@param {Boolean} includeTouching whether or not the point should be considered in the circle if they are merely touching
-	@return whether the specified point lies in the specified circle (true) or not (false)
+	@return {Boolean} whether the specified point lies in the specified circle (true) or not (false)
 	**/
 	ptInCircle(px,py,cx,cy, cr, includeTouching) {
 		if (includeTouching) {
@@ -630,12 +630,12 @@ export class GraphComponent implements OnInit {
 
 	/**
 	* get the angle between two points
-	* @param x1: the x coordinate of the first point
-	* @param y1: the y coordinate of the first point
-	* @param x2: the x coordinate of the second point
-	* @param y2: the y coordinate of the second point
-	* @param radians: whether the angle is in radians (true) or degrees (false)
-	* @returns the angle between the two input points
+	* @param {number} x1 the x coordinate of the first point
+	* @param {number} y1 the y coordinate of the first point
+	* @param {number} x2 the x coordinate of the second point
+	* @param {number} y2 the y coordinate of the second point
+	* @param {Boolean} radians whether the angle is in radians (true) or degrees (false)
+	* @return {number} the angle between the two input points
 	*/
 
  	ptAngle(x1,y1,x2,y2,radians) {
@@ -716,13 +716,12 @@ export class GraphComponent implements OnInit {
 
 	  /**
 	 * get the position of the mouse in the document
-	 * @param evt: the currently processing event
-	 * @param cnv: the canvas to check mouse position against
-	 * @returns an object containing the x,y coordinates of the mouse
+	 * @param {any} evt the currently processing event
+	 * @param {any} cnv the canvas to check mouse position against
+	 * @return {any} an object containing the x,y coordinates of the mouse
 	 */
 	getMouseDocument(evt,cnv) {
 		var rect = cnv.getBoundingClientRect();
 		return {x: evt.clientX - rect.left, y: evt.clientY - rect.top};	
 	}
-
 }
