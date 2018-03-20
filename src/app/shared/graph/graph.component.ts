@@ -62,10 +62,6 @@ export class GraphComponent implements OnInit {
 	//width of space between columns (subtracted from colWidth)
 	private colHalfSpace : number = 20;
 
-	//data structures handling graph nodes and links; defined below
-	private node : any;
-	private link : any;
-
 	//2d list, where each list contains the order in which nodes appear in the column corresponding to the list #
 	//note that when using a force directed graph, we ignore the node order as node re-positioning is allowed
 	private columnList : any = [];
@@ -279,6 +275,14 @@ export class GraphComponent implements OnInit {
 	@param allowColumnChange: whether we should set the node column if it has already been set (true) or leave it as is (false)
 	**/
 	setColNum(node : any, colNum: number, allowColumnChange = false) {
+		//disallow moving to a nonexistent column
+		if (colNum < 0) {
+			colNum = 0;
+		}
+		else if (colNum >= this.numColumns) {
+			colNum = this.numColumns - 1;
+		}
+		
 		//disallow moving a locked node
 		if (node.locked) {
 			return;
