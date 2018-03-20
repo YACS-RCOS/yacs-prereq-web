@@ -324,18 +324,14 @@ export class GraphComponent implements OnInit {
 			while (colBounds == null || node.x > colBounds.min - this.colHalfSpace) {
 				colBounds = this.calculateColumnBounds(++colNum);
 			}
-			this.setColNum(node,colNum-1,true);
+			var desiredColumn = colNum-1;
+			var startColumn = node.column;
+			//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
+			while (startColumn != desiredColumn) {
+				startColumn += (startColumn > desiredColumn ? -1 : 1);
+				this.layoutFromNode(node,startColumn,true);
+			}
 		}
-
-
-
-		/*var desiredColumn = Math.floor((node.x+this.colWidth/4 - 30)/this.colWidth);
-		var startColumn = node.column;
-		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
-		while (startColumn != desiredColumn) {
-			startColumn += (startColumn > desiredColumn ? -1 : 1);
-			this.layoutFromNode(node,startColumn,true);
-		}*/
 	}
   
 	/**
