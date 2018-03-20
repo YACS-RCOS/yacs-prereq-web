@@ -449,6 +449,10 @@ export class GraphComponent implements OnInit {
 		//first pass: move dragged node
 		for(var key in this.nodes) { 
 			let curNode : any = this.nodes[key];
+			//don't interact with hidden nodes
+			if (curNode.hidden) {
+				continue;
+			}
 			if (curNode.state == "drag") {
 				if (!this.mouseHeldLeft) {
 					curNode.state = "idle";
@@ -469,6 +473,10 @@ export class GraphComponent implements OnInit {
 		//second pass: move non-dragged nodes
 		for(var key in this.nodes) { 
 			let curNode : any = this.nodes[key];
+			//don't interact with hidden nodes
+			if (curNode.hidden) {
+				continue;
+			}
 			if (curNode.state == "drag") {
 				continue;
 			}
@@ -495,6 +503,10 @@ export class GraphComponent implements OnInit {
 			let y1 = curNode.y;
 			for(var key2 in this.nodes) { 
 				let nextNode : any = this.nodes[key2];
+				//don't interact with hidden nodes
+				if (nextNode.hidden) {
+					continue;
+				}
 				//don't affect self
 				if (curNode == nextNode) {
 					continue;
