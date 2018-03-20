@@ -92,6 +92,9 @@ export class GraphComponent implements OnInit {
 	//width of space between columns (subtracted from colWidth)
 	private colHalfSpace : number = 20;
 
+	//~misc visuals~
+	private hiddenAlpha : number = .25;
+
 	//data initialization
 	//define our node and edge dicts as 'node id' : 'node' and 'node id' : 'edge list', respectively
 	private nodes: any = {};
@@ -385,6 +388,7 @@ export class GraphComponent implements OnInit {
 		for(var key in this.nodes) { 
    			if (this.nodes.hasOwnProperty(key)) {
 				let curNode : any = this.nodes[key];
+				this.ctx.globalAlpha = curNode.hidden ? this.hiddenAlpha : 1;
 				this.ctx.beginPath();
 				this.ctx.arc(curNode.x,curNode.y,this.nodeRadius,0,2*Math.PI);
 				this.ctx.strokeStyle = curNode.state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
@@ -407,6 +411,7 @@ export class GraphComponent implements OnInit {
 						this.ctx.lineTo(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y);
 						this.ctx.strokeStyle = this.nodes[curEdge[i].startNodeID].state == "hover" || this.nodes[curEdge[i].endNodeID].state == "hover" ?
 						this.edgeHoverColor : this.edgeColor;
+						this.ctx.globalAlpha = this.nodes[curEdge[i].startNodeID].hidden || this.nodes[curEdge[i].endNodeID].hidden ? this.hiddenAlpha : 1;
 						this.ctx.stroke();
 					}
 				}
@@ -419,11 +424,14 @@ export class GraphComponent implements OnInit {
 		for(var key in this.nodes) { 
    			if (this.nodes.hasOwnProperty(key)) {
 				let curNode : any = this.nodes[key];
+				this.ctx.globalAlpha = curNode.hidden ? this.hiddenAlpha : 1;
 				let labelWidth = this.ctx.measureText(curNode.id).width;
 				this.ctx.fillStyle = curNode.state == "hover" ? this.nodeLabelHoverColor : this.nodeLabelColor;
 				this.ctx.fillText(curNode.id,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
 			}
 		}
+
+		this.ctx.globalAlpha = 1;
 	}
 
 	/**
@@ -484,6 +492,9 @@ export class GraphComponent implements OnInit {
 				if (curNode.state == "hover") {
 					if (this.mouseClickedLeft) {
 						curNode.state = "drag";
+					}
+					else if (this.mouseClickedRight) {
+						this.hideNode(curNode.id);
 					}
 				}
 
@@ -655,6 +666,7 @@ export class GraphComponent implements OnInit {
 		requestAnimationFrame(this.update.bind(this));
 		//reset 1-frame mouse events
 		this.mouseClickedLeft = false;
+		this.mouseClickedRight = false;
 	}
 
 	/**
