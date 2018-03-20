@@ -65,17 +65,17 @@ export class GraphComponent implements OnInit {
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
 	private nodeStrokeWidth : number = 2;
 	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
-	private nodeRadius : number = 10;
+	private nodeRadius : number = 20;
 
 	//~edge visuals~
-	private edgeStrokeWidth : number = 1.75;
+	private edgeStrokeWidth : number = 2.5;
 	private edgeColor : any = "rgba(100,255,100,1)";
 	private edgeHoverColor : any = "rgba(200,255,200,1)";
 
 	//~node label visuals~
 	private nodeLabelColor : any = "rgba(0,0,240,1)";
 	private nodeLabelHoverColor : any = "rgba(60,60,255,1)";
-	private nodeLabelFontSize : number = 12; 
+	private nodeLabelFontSize : number = 18; 
 
 	//~graph visuals~
 	private bgColor : any = "rgba(255,255,255,1)";
@@ -84,20 +84,23 @@ export class GraphComponent implements OnInit {
 
 	//~toolbar visuals~
 	private toolbarHeight : number = 30;
+	private toolbarColor : any = "rgba(200,200,255,1)";
+	private toolbarStrokeColor : any = "rgba(150,150,205,1)";
+	private toolbarStrokeWidth : any = 1;
 
 	//~column visuals~
 	private columnBackgroundColor : any = "rgba(200,200,200,1)";
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
 	//how many pixels above the top of the column should be reserved for spacing and to prevent node title clipping
-	private colTopBuffer : number = 16;
-	private colHeight : number = this.graphHeight - this.toolbarHeight - this.colTopBuffer - this.columnStrokeWidth;
+	private colTopBuffer : number = 32;
+	private colHeight : number = this.graphHeight - this.toolbarHeight - this.colTopBuffer;
 	//width of column contained area
 	private colWidth : number = 195;
 	//width of space between columns (subtracted from colWidth)
 	private colHalfSpace : number = 20;
 	private colLabelColor : any = "rgba(130,130,130,1)";
-	private colLabelFontSize : number = 18;
+	private colLabelFontSize : number = 24;
 
 	//~misc visuals~
 	private hiddenAlpha : number = .25;
@@ -124,8 +127,8 @@ export class GraphComponent implements OnInit {
 
 	//forces definition
 	private nodeAttractionForce : number = .95;
-	private nodeRepelForce : number = 9;
-	private nodeRepelMaxDist : number = 40;
+	private nodeRepelForce : number = 12;
+	private nodeRepelMaxDist : number = 75;
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -386,7 +389,8 @@ export class GraphComponent implements OnInit {
 	**/
 	drawToolbar() {
 		this.ctx.fillStyle = "rgba(0,0,255,1)";
-		this.ctx.fillRect(0,0,this.graphWidth,this.toolbarHeight);
+		this.roundRect(this.ctx,this.toolbarStrokeWidth/2,this.toolbarStrokeWidth/2,this.graphWidth-this.toolbarStrokeWidth,this.toolbarHeight-this.toolbarStrokeWidth,
+			this.toolbarColor,this.toolbarStrokeColor,this.toolbarStrokeWidth,10,true,true);
 	}
 
 	/**
@@ -455,8 +459,9 @@ export class GraphComponent implements OnInit {
 		for (var i : number = 0; i < this.numColumns; ++i) {
 			//draw column rect
 			let columnXMin = i*this.colWidth;
-			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, this.toolbarHeight + this.colTopBuffer, this.colWidth - this.colHalfSpace*2, this.colHeight,
-				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
+			this.roundRect(this.ctx,columnXMin + this.colHalfSpace + this.columnStrokeWidth/2, this.toolbarHeight + this.colTopBuffer + this.columnStrokeWidth/2,
+			 this.colWidth - this.colHalfSpace*2 - this.columnStrokeWidth, this.colHeight - this.columnStrokeWidth, 
+			 this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
 
 			//draw column title
 			this.ctx.font = this.colLabelFontSize + "px Arial";
