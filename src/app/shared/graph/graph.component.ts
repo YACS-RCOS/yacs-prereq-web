@@ -82,6 +82,7 @@ export class GraphComponent implements OnInit {
 	private columnBackgroundColor : any = "rgba(200,200,200,1)";
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
+	private edgeColor : any = "rgba(100,255,100,1)";
 	private nodeColor : any = "rgba(255,100,100,1)";
 	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
@@ -159,7 +160,7 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":100};
+		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":100};
 		return this.nodes[id];
 	}
 
@@ -168,19 +169,7 @@ export class GraphComponent implements OnInit {
 	@param id: the string id of the node to hide
 	**/
 	lockNode(id:string) {
-		// var curNode;
-		// for (var i : number = 0; i < this.node._groups[0].length; ++i) {
-		// 	curNode = this.node._groups[0][i];
-		// 	var curTitle = curNode.childNodes[0].childNodes[0].data;
-		// 	//make sure the ids are the same
-		// 	if (curTitle == id) {
-		// 		//found the node; now lock it
-		// 		this.node._groups[0][i].locked = true;
-		// 		return true;
-		// 	}
-		// }
-		// //the desired node was not found
-		// return false;
+		this.nodes[id].locked = true;
 	}
 
 	/**
@@ -188,12 +177,7 @@ export class GraphComponent implements OnInit {
 	@param id: the string id of the node to hide
 	**/
 	hideNode(id:string) {
-		console.log("***testing hideNode***");
-		//first find and remove the desired node
-		//delete(this.nodes[id]);
-		//this.forceGraph.selectAll("node") = this.nodes;
-		//this.forceGraph.nodes(this.nodes);
-		//this.forceGraph.restart();
+		this.nodes[id].hidden = true;
 	}
 
 	/**
@@ -204,8 +188,7 @@ export class GraphComponent implements OnInit {
 	**/
 	addEdge(startNode:any, endNode:any, edgeType:string) {
 		if (startNode && endNode) {
-			let newEdge = {"source" : startNode.id,"target" : endNode.id, 
-				"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType};
+			let newEdge = {"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType};
 
 			if (!this.edges[startNode.id]) {
 				this.edges[startNode.id] = [];
@@ -394,7 +377,25 @@ export class GraphComponent implements OnInit {
 			}
 		}
 
-		//next draw node titles
+		//next draw edges
+		this.ctx.strokeStyle = this.edgeColor;
+		for (var key in this.edges) {
+			if (this.edges.hasOwnProperty(key)) {
+				let curEdge : any = this.edges[key];
+				for (let i : number = 0; i < curEdge.length; ++i) {
+					//only draw edges where we are the start node to avoid drawing all edges twice
+					if (curEdge[i].startNodeID == key) {
+						this.ctx.beginPath();
+						this.ctx.moveTo(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y);
+						this.ctx.lineTo(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y);
+						this.ctx.stroke();
+					}
+				}
+			}
+		}
+
+
+		//finally draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
 		this.ctx.fillStyle = this.nodeLabelColor;
 		for(var key in this.nodes) { 
@@ -404,13 +405,6 @@ export class GraphComponent implements OnInit {
 				this.ctx.fillText(curNode.id,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
 			}
 		}
-	}
-
-	/**
-	draw all edges
-	**/
-	drawEdges() {
-
 	}
 
 	/**
