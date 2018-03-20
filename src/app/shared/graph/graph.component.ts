@@ -82,11 +82,16 @@ export class GraphComponent implements OnInit {
 	private graphWidth : number = 1580;
 	private graphHeight : number = 600;
 
+	//~toolbar visuals~
+	private toolbarHeight : number = 30;
+
 	//~column visuals~
 	private columnBackgroundColor : any = "rgba(200,200,200,1)";
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
-	private colHeight : number = this.graphHeight - 30;
+	//how many pixels above the top of the column should be reserved for spacing and to prevent node title clipping
+	private colTopBuffer : number = 16;
+	private colHeight : number = this.graphHeight - this.toolbarHeight - this.colTopBuffer - this.columnStrokeWidth;
 	//width of column contained area
 	private colWidth : number = 195;
 	//width of space between columns (subtracted from colWidth)
@@ -373,6 +378,15 @@ export class GraphComponent implements OnInit {
 		this.clearScreen();
 		this.drawSemesterColumns();
 		this.drawNodes();
+		this.drawToolbar();
+	}
+
+	/**
+	draw the toolbar
+	**/
+	drawToolbar() {
+		this.ctx.fillStyle = "rgba(0,0,255,1)";
+		this.ctx.fillRect(0,0,this.graphWidth,this.toolbarHeight);
 	}
 
 	/**
@@ -441,7 +455,7 @@ export class GraphComponent implements OnInit {
 		for (var i : number = 0; i < this.numColumns; ++i) {
 			//draw column rect
 			let columnXMin = i*this.colWidth;
-			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.graphHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace*2, this.colHeight,
+			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, this.toolbarHeight + this.colTopBuffer, this.colWidth - this.colHalfSpace*2, this.colHeight,
 				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
 
 			//draw column title
@@ -449,7 +463,7 @@ export class GraphComponent implements OnInit {
 			let labelWidth = this.ctx.measureText(this.semesterNames[i]).width;
 			this.ctx.fillStyle = this.colLabelColor;
 			this.ctx.fillText(this.semesterNames[i],columnXMin + this.colHalfSpace + (this.colWidth - this.colHalfSpace*2)/2 - labelWidth/2,
-				(this.graphHeight - this.colHeight)/2 + this.colLabelFontSize);
+				this.toolbarHeight + this.colTopBuffer + this.colLabelFontSize);
 		}
 
 	}
@@ -587,7 +601,7 @@ export class GraphComponent implements OnInit {
 		}
 
 		//y bounds
-		let yMin = (this.graphHeight - this.colHeight) / 2;
+		let yMin = this.toolbarHeight + this.colTopBuffer;
 		let yMax = yMin + this.colHeight;
 		if (node.y - this.nodeRadius < yMin) {
 			node.y = yMin + this.nodeRadius;
