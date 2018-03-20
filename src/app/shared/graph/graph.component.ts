@@ -86,7 +86,7 @@ export class GraphComponent implements OnInit {
 	private columnBackgroundColor : any = "rgba(200,200,200,1)";
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
-	private colHeight : number = this.graphHeight - 2;
+	private colHeight : number = this.graphHeight - 30;
 	//width of column contained area
 	private colWidth : number = 195;
 	//width of space between columns (subtracted from colWidth)
@@ -587,12 +587,14 @@ export class GraphComponent implements OnInit {
 		}
 
 		//y bounds
-		if (node.y - this.nodeRadius < 0) {
-			node.y = this.nodeRadius;
+		let yMin = (this.graphHeight - this.colHeight) / 2;
+		let yMax = yMin + this.colHeight;
+		if (node.y - this.nodeRadius < yMin) {
+			node.y = yMin + this.nodeRadius;
 		}
 
-		if (node.y + this.nodeRadius > this.graphHeight) {
-			node.y = this.graphHeight - this.nodeRadius;
+		if (node.y + this.nodeRadius > yMax) {
+			node.y = yMax - this.nodeRadius;
 		}
 	}
 
