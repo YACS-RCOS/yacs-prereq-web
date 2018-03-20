@@ -46,6 +46,9 @@ export class GraphComponent implements OnInit {
 	private nodeRadius : number = 10;
 	private nodeStrokeWidth : number = 2;
 
+	//constants defining edge visuals
+	private edgeStrokeWidth : number = 1.75;
+
 	//svg dimensions define the play area of our graph
 	private svgWidth : number = 1580;
 	private svgHeight : number = 600;
@@ -83,6 +86,7 @@ export class GraphComponent implements OnInit {
 	private columnStrokeColor : any = "rgba(150,150,150,1)";
 	private columnStrokeWidth : number = 1;
 	private edgeColor : any = "rgba(100,255,100,1)";
+	private edgeHoverColor : any = "rgba(200,255,200,1)";
 	private nodeColor : any = "rgba(255,100,100,1)";
 	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
@@ -160,7 +164,7 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":100};
+		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":Math.random()*this.svgHeight};
 		return this.nodes[id];
 	}
 
@@ -374,7 +378,7 @@ export class GraphComponent implements OnInit {
 		}
 
 		//next draw edges
-		this.ctx.strokeStyle = this.edgeColor;
+		this.ctx.lineWidth = this.edgeStrokeWidth;
 		for (var key in this.edges) {
 			if (this.edges.hasOwnProperty(key)) {
 				let curEdge : any = this.edges[key];
@@ -384,6 +388,8 @@ export class GraphComponent implements OnInit {
 						this.ctx.beginPath();
 						this.ctx.moveTo(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y);
 						this.ctx.lineTo(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y);
+						this.ctx.strokeStyle = this.nodes[curEdge[i].startNodeID].state == "hover" || this.nodes[curEdge[i].endNodeID].state == "hover" ?
+						this.edgeHoverColor : this.edgeColor;
 						this.ctx.stroke();
 					}
 				}
