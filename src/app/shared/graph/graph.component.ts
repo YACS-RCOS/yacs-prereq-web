@@ -31,12 +31,31 @@ export class GraphComponent implements OnInit {
 	}
 	@HostListener('document:mousedown', ['$event'])
 	onMouseDown(e) {
-		this.mouseClicked = true;
-		this.mouseHeld = true;
+		//left mouse button
+		if (e.which == 1) {
+			this.mouseClickedLeft = true;
+			this.mouseHeldLeft = true;
+		}
+
+		//right mouse button
+		else if (e.which == 3) {
+			this.mouseClickedRight = true;
+			this.mouseHeldRight = true;
+		}	
 	}
 	@HostListener('document:mouseup', ['$event'])
 	onMouseUp(e) {
-		this.mouseHeld = false;
+		if (e.which == 1) {
+			this.mouseHeldLeft = false;
+		}
+		else if (e.which == 3) {
+			this.mouseHeldRight = false;
+		}
+	}
+	//disable right-click context menu so we can repurpose the right mouse button
+	@HostListener('document:contextmenu', ['$event'])
+	onContextMenu(e) {
+		return false;	
 	}
 
 	//visual style definition
@@ -86,8 +105,10 @@ export class GraphComponent implements OnInit {
 	private numColumns : number = 8;
 	//mouse state
 	private mousePos : any = {x:-1,y:-1};
-	private mouseHeld : Boolean = false;
-	private mouseClicked : Boolean = false;
+	private mouseHeldLeft : Boolean = false;
+	private mouseHeldRight : Boolean = false;
+	private mouseClickedLeft : Boolean = false;
+	private mouseClickedRight : Boolean = false;
 
 	//forces definition
 	private nodeAttractionForce : number = .95;
@@ -426,7 +447,7 @@ export class GraphComponent implements OnInit {
    			if (this.nodes.hasOwnProperty(key)) {
 				let curNode : any = this.nodes[key];
 				if (curNode.state == "drag") {
-					if (!this.mouseHeld) {
+					if (!this.mouseHeldLeft) {
 						curNode.state = "idle";
 
 						//we just released this node; place it in the nearest column
@@ -461,7 +482,7 @@ export class GraphComponent implements OnInit {
 
 				//check if should begin dragging
 				if (curNode.state == "hover") {
-					if (this.mouseClicked) {
+					if (this.mouseClickedLeft) {
 						curNode.state = "drag";
 					}
 				}
@@ -633,7 +654,7 @@ export class GraphComponent implements OnInit {
 		this.redrawScreen();
 		requestAnimationFrame(this.update.bind(this));
 		//reset 1-frame mouse events
-		this.mouseClicked = false;
+		this.mouseClickedLeft = false;
 	}
 
 	/**
