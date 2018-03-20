@@ -73,9 +73,6 @@ export class GraphComponent implements OnInit {
 	//maintain the number of columns displayed by the graph
 	private numColumns : number = 8;
 
-	//how many pixels above each node should the title reside
-	private nodeTitleOffset : number = 14;
-
 	//canvas/context for rendering
 	private cnv : any; 
 	private ctx : any;
@@ -91,7 +88,8 @@ export class GraphComponent implements OnInit {
 	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
 	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
-	private nodeLabelColor : any = "rgba(0,0,255,1)";
+	private nodeLabelColor : any = "rgba(0,0,240,1)";
+	private nodeLabelHoverColor : any = "rgba(60,60,255,1)";
 	private nodeLabelFontSize : number = 12;
 
 	//forces strength
@@ -399,11 +397,11 @@ export class GraphComponent implements OnInit {
 
 		//finally draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
-		this.ctx.fillStyle = this.nodeLabelColor;
 		for(var key in this.nodes) { 
    			if (this.nodes.hasOwnProperty(key)) {
 				let curNode : any = this.nodes[key];
 				let labelWidth = this.ctx.measureText(curNode.id).width;
+				this.ctx.fillStyle = curNode.state == "hover" ? this.nodeLabelHoverColor : this.nodeLabelColor;
 				this.ctx.fillText(curNode.id,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
 			}
 		}
