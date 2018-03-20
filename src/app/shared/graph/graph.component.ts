@@ -197,7 +197,7 @@ export class GraphComponent implements OnInit {
 	@param {string} id the string id of the node to hide
 	**/
 	lockNode(id:string) {
-		this.nodes[id].locked = true;
+		this.nodes[id].locked = !this.nodes[id].locked;
 	}
 
 	/**
@@ -205,7 +205,7 @@ export class GraphComponent implements OnInit {
 	@param {string} id the string id of the node to hide
 	**/
 	hideNode(id:string) {
-		this.nodes[id].hidden = true;
+		this.nodes[id].hidden = !this.nodes[id].hidden;
 	}
 
 	/**
@@ -350,6 +350,10 @@ export class GraphComponent implements OnInit {
 	@param {any} node the node which we wish to snap to the colum nearest to its position
 	**/
 	moveToNearestColumn(node : any) {
+		//ignore locked nodes
+		if (node.locked) {
+			return;
+		}
 		//base case: if we release a node past the left side of the screen, return it to column 0
 		if (node.x < 0) {
 			node.column = 0;
@@ -391,6 +395,7 @@ export class GraphComponent implements OnInit {
 		this.ctx.fillStyle = "rgba(0,0,255,1)";
 		this.roundRect(this.ctx,this.toolbarStrokeWidth/2,this.toolbarStrokeWidth/2,this.graphWidth-this.toolbarStrokeWidth,this.toolbarHeight-this.toolbarStrokeWidth,
 			this.toolbarColor,this.toolbarStrokeColor,this.toolbarStrokeWidth,10,true,true);
+
 	}
 
 	/**
@@ -416,6 +421,16 @@ export class GraphComponent implements OnInit {
 			this.ctx.fillStyle = curNode.state == "hover" ? this.nodeHoverColor : this.nodeColor;
 			this.ctx.fill();
 			this.ctx.stroke();
+
+			//draw a lock symbol if the node is locked
+			if (curNode.locked) {
+				this.ctx.fillStyle = "rgba(25,25,25,1)";
+				this.ctx.strokeStyle = "rgba(25,25,25,1)";
+				this.ctx.fillRect(curNode.x - this.nodeRadius/2,curNode.y - this.nodeRadius/2, 8,7);
+				this.ctx.beginPath();
+				this.ctx.arc(curNode.x - this.nodeRadius/2 + 4,curNode.y - this.nodeRadius/2,3,Math.PI,2*Math.PI);
+				this.ctx.stroke();
+			}
 		}
 
 		//next draw edges
@@ -526,7 +541,7 @@ export class GraphComponent implements OnInit {
 					curNode.state = "drag";
 				}
 				else if (this.mouseClickedRight) {
-					this.hideNode(curNode.id);
+					this.lockNode(curNode.id);
 				}
 			}
 
@@ -764,7 +779,7 @@ export class GraphComponent implements OnInit {
 	 * @param {any} evt the currently processing event
 	 * @param {any} cnv the canvas to check mouse position against
 	 * @return {any} an object containing the x,y coordinates of the mouse
-	 */
+	 **/
 	getMouseDocument(evt,cnv) {
 		var rect = cnv.getBoundingClientRect();
 		return {x: evt.clientX - rect.left, y: evt.clientY - rect.top};	
