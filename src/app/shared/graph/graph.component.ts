@@ -19,9 +19,12 @@ import * as d3 from 'd3';
 
 export class GraphComponent implements OnInit {
 	@Input() private data: Array < any > ;
+
+	//grab references to our graph and canvas
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
-	
+
+	//add mouse click and position event listeners to the document so we can interact with the graph
 	@HostListener('document:mousemove', ['$event']) 
 	onMouseMove(e) {
 		this.mousePos = this.getMouseDocument(e,this.cnv);
@@ -36,69 +39,60 @@ export class GraphComponent implements OnInit {
 		this.mouseHeld = false;
 	}
 
-
-	//dictionary of 'name' : 'node' for easy node access during graph construction
-	private nodes: any = {};
-	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
-	private edges: any = {};
-	
-	//constants defining node visuals
-	private nodeRadius : number = 10;
-	private nodeStrokeWidth : number = 2;
-
-	//constants defining edge visuals
-	private edgeStrokeWidth : number = 1.75;
-
-	//svg dimensions define the play area of our graph
-	private svgWidth : number = 1580;
-	private svgHeight : number = 600;
-
-	//height of column graphic
-	private colHeight : number = this.svgHeight - 2;
-
-	//width of column contained area
-	private colWidth : number = 195;
-
-	//width of space between columns (subtracted from colWidth)
-	private colHalfSpace : number = 20;
-
-	//2d list, where each list contains the order in which nodes appear in the column corresponding to the list #
-	//note that when using a force directed graph, we ignore the node order as node re-positioning is allowed
-	private columnList : any = [];
-
-	//maintain the number of columns displayed by the graph
-	private numColumns : number = 8;
-
-	//canvas/context for rendering
-	private cnv : any; 
-	private ctx : any;
-	
-	//visual style 
-	private bgColor : any = "rgba(255,255,255,1)";
-	private columnBackgroundColor : any = "rgba(200,200,200,1)";
-	private columnStrokeColor : any = "rgba(150,150,150,1)";
-	private columnStrokeWidth : number = 1;
-	private edgeColor : any = "rgba(100,255,100,1)";
-	private edgeHoverColor : any = "rgba(200,255,200,1)";
+	//visual style definition
+	//~node visuals~
 	private nodeColor : any = "rgba(255,100,100,1)";
 	private nodeHoverColor : any = "rgba(255,125,125,1)";
 	private nodeStrokeColor : any = "rgba(240,75,75,1)";
+	private nodeStrokeWidth : number = 2;
 	private nodeStrokeHoverColor : any = "rgba(250,90,90,1)";
+	private nodeRadius : number = 10;
+
+	//~edge visuals~
+	private edgeStrokeWidth : number = 1.75;
+	private edgeColor : any = "rgba(100,255,100,1)";
+	private edgeHoverColor : any = "rgba(200,255,200,1)";
+
+	//~node label visuals~
 	private nodeLabelColor : any = "rgba(0,0,240,1)";
 	private nodeLabelHoverColor : any = "rgba(60,60,255,1)";
-	private nodeLabelFontSize : number = 12;
+	private nodeLabelFontSize : number = 12; 
 
-	//forces strength
-	private nodeAttractionForce : number = .95;
-	private nodeRepelForce : number = 9;
-	private nodeRepelMaxDist : number = 40;
+	//~graph visuals~
+	private bgColor : any = "rgba(255,255,255,1)";
+	private graphWidth : number = 1580;
+	private graphHeight : number = 600;
 
+	//~column visuals~
+	private columnBackgroundColor : any = "rgba(200,200,200,1)";
+	private columnStrokeColor : any = "rgba(150,150,150,1)";
+	private columnStrokeWidth : number = 1;
+	private colHeight : number = this.graphHeight - 2;
+	//width of column contained area
+	private colWidth : number = 195;
+	//width of space between columns (subtracted from colWidth)
+	private colHalfSpace : number = 20;
+
+	//data initialization
+	//define our node and edge dicts as 'node id' : 'node' and 'node id' : 'edge list', respectively
+	private nodes: any = {};
+	private edges: any = {};
+	//canvas/context for rendering
+	private cnv : any; 
+	private ctx : any;
+	//2d list, where each list contains all nodes in the column whose number corresponds to that index
+	private columnList : any = [];
+	//maintain the number of columns displayed by the graph
+	private numColumns : number = 8;
 	//mouse state
 	private mousePos : any = {x:-1,y:-1};
 	private mouseHeld : Boolean = false;
 	private mouseClicked : Boolean = false;
 
-	//test node data
+	//forces definition
+	private nodeAttractionForce : number = .95;
+	private nodeRepelForce : number = 9;
+	private nodeRepelMaxDist : number = 40;
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -107,8 +101,8 @@ export class GraphComponent implements OnInit {
 		//init canvas
 		this.cnv = this.canvasRef.nativeElement;
 		this.ctx = this.cnv.getContext("2d");
-		this.cnv.width = this.svgWidth;
-		this.cnv.height = this.svgHeight;
+		this.cnv.width = this.graphWidth;
+		this.cnv.height = this.graphHeight;
 	}
 
 	/**
@@ -158,7 +152,7 @@ export class GraphComponent implements OnInit {
 	@returns a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
-		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":Math.random()*this.svgHeight};
+		this.nodes[id] = {"id" : id, "active" : true, "locked" : false, "hidden":false, "containedNodeIds" : containedNodeIds, "column" : -1, "x":0,"y":Math.random()*this.graphHeight};
 		return this.nodes[id];
 	}
 
@@ -282,7 +276,7 @@ export class GraphComponent implements OnInit {
 		else if (colNum >= this.numColumns) {
 			colNum = this.numColumns - 1;
 		}
-		
+
 		//disallow moving a locked node
 		if (node.locked) {
 			return;
@@ -358,7 +352,7 @@ export class GraphComponent implements OnInit {
 	**/
 	clearScreen() {
 		this.ctx.fillStyle=this.bgColor;
-		this.ctx.fillRect(0,0,this.svgWidth,this.svgHeight);
+		this.ctx.fillRect(0,0,this.graphWidth,this.graphHeight);
 	}
 
 	/**
@@ -417,7 +411,7 @@ export class GraphComponent implements OnInit {
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
 			let columnXMin = i*this.colWidth;
-			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.svgHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace*2, this.colHeight,
+			this.roundRect(this.ctx,columnXMin + this.colHalfSpace, (this.graphHeight - this.colHeight)/2, this.colWidth - this.colHalfSpace*2, this.colHeight,
 				this.columnBackgroundColor,this.columnStrokeColor, this.columnStrokeWidth, 20,true,true);
 		}
 
@@ -552,8 +546,8 @@ export class GraphComponent implements OnInit {
 			node.y = this.nodeRadius;
 		}
 
-		if (node.y + this.nodeRadius > this.svgHeight) {
-			node.y = this.svgHeight - this.nodeRadius;
+		if (node.y + this.nodeRadius > this.graphHeight) {
+			node.y = this.graphHeight - this.nodeRadius;
 		}
 	}
 
