@@ -38,9 +38,9 @@ export class GraphComponent implements OnInit {
 
 
 	//dictionary of 'name' : 'node' for easy node access during graph construction
-	private nodeDict: any = {};
+	private nodes: any = {};
 	//dictionary of 'name' : 'list of connected edges' for easy edge access during graph construction
-	private edgeDict: any = {};
+	private edges: any = {};
 	
 	//constants defining node visuals
 	private nodeRadius : number = 10;
@@ -100,7 +100,6 @@ export class GraphComponent implements OnInit {
 	private mouseClicked : Boolean = false;
 
 	//test node data
-	private testNodes : any = {};
 
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
@@ -113,8 +112,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.svgHeight;
 
 		//create some test nodes
-		this.testNodes["1"] = {x:100,y:100,state:"idle",name:"DS",col:0};
-		this.testNodes["2"] = {x:150,y:200,state:"idle",name:"CS1",col:0};
+		this.nodes["1"] = {x:100,y:100,state:"idle",name:"DS",column:0};
+		this.nodes["2"] = {x:150,y:200,state:"idle",name:"CS1",column:0};
 	}
 
 	/**
@@ -138,10 +137,10 @@ export class GraphComponent implements OnInit {
 		// 		//construct edges based off of this node's prereqs and coreqs
 		// 		let hasValidEdge = false;
 		// 		for (let edge of node.prereq_formula) {
-		// 			hasValidEdge = baseThis.addEdge(circle,baseThis.nodeDict[edge],"prereq") || hasValidEdge;
+		// 			hasValidEdge = baseThis.addEdge(circle,baseThis.nodes[edge],"prereq") || hasValidEdge;
 		// 		}
 		// 		for (let edge of node.coreq_formula) {
-		// 			baseThis.addEdge(circle,baseThis.nodeDict[edge],"coreq");
+		// 			baseThis.addEdge(circle,baseThis.nodes[edge],"coreq");
 		// 		}
 		// 		//start at column 0 if we have no prereqs or our prereqs are not in the dataset
 		// 		if (node.prereq_formula.length == 0 || !hasValidEdge) {
@@ -158,17 +157,17 @@ export class GraphComponent implements OnInit {
 	}
 
 	/**
-	add a node to the graph, and store it in our nodeDict. Column defaults to -1 to indicate that it has not yet been placed
+	add a node to the graph, and store it in our nodes. Column defaults to -1 to indicate that it has not yet been placed
 	@param id: the string id which corresponds to the newly added node
 	@param containedNodeIDs: list of string ids corresponding to nodes to which this node branches
-	@returns a reference to the newly constructed node in our nodeDict
+	@returns a reference to the newly constructed node in our nodes
 	**/
 	addNode(id:string, containedNodeIds:any) {
 		// this.graph.nodes.push({"id" : id, "active" : true, "locked" : false});
-		// this.nodeDict[id] = this.graph.nodes[this.graph.nodes.length - 1];
+		// this.nodes[id] = this.graph.nodes[this.graph.nodes.length - 1];
 		// this.graph.nodes[this.graph.nodes.length-1].containedNodeIds = containedNodeIds;
 		// this.graph.nodes[this.graph.nodes.length-1].column = -1;
-		// return this.nodeDict[id];
+		// return this.nodes[id];
 	}
 
 	/**
@@ -198,9 +197,9 @@ export class GraphComponent implements OnInit {
 	hideNode(id:string) {
 		console.log("***testing hideNode***");
 		//first find and remove the desired node
-		//delete(this.nodeDict[id]);
-		//this.forceGraph.selectAll("node") = this.nodeDict;
-		//this.forceGraph.nodes(this.nodeDict);
+		//delete(this.nodes[id]);
+		//this.forceGraph.selectAll("node") = this.nodes;
+		//this.forceGraph.nodes(this.nodes);
 		//this.forceGraph.restart();
 	}
 
@@ -215,14 +214,14 @@ export class GraphComponent implements OnInit {
 		// 	this.graph.links.push({"source" : startNode.id,"target" : endNode.id, 
 		// 		"startNodeID" : startNode.id, "endNodeID" : endNode.id, "edgeType" : edgeType});
 
-		// 	if (!this.edgeDict[startNode.id]) {
-		// 		this.edgeDict[startNode.id] = [];
+		// 	if (!this.edges[startNode.id]) {
+		// 		this.edges[startNode.id] = [];
 		// 	}
-		// 	this.edgeDict[startNode.id].push(this.graph.links[this.graph.links.length-1]);
-		// 	if (!this.edgeDict[endNode.id]) {
-		// 		this.edgeDict[endNode.id] = [];
+		// 	this.edges[startNode.id].push(this.graph.links[this.graph.links.length-1]);
+		// 	if (!this.edges[endNode.id]) {
+		// 		this.edges[endNode.id] = [];
 		// 	}
-		// 	this.edgeDict[endNode.id].push(this.graph.links[this.graph.links.length-1]);
+		// 	this.edges[endNode.id].push(this.graph.links[this.graph.links.length-1]);
 		// 	return true;
 		// }
 		// return false;
@@ -238,18 +237,18 @@ export class GraphComponent implements OnInit {
 		}
 
 		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
-		for (let key in this.nodeDict) {
-			let curNode = this.nodeDict[key];
+		for (let key in this.nodes) {
+			let curNode = this.nodes[key];
 			if (curNode.containedNodeIds != null) {
 				let farthestColumn = 0;
 				for (let i = 0; i < curNode.containedNodeIds.length; ++i) {
-					let curContainedNode = this.nodeDict[curNode.containedNodeIds[i]];
+					let curContainedNode = this.nodes[curNode.containedNodeIds[i]];
 					farthestColumn = Math.max(farthestColumn,curContainedNode? +curContainedNode.column : 0);
 				}
 				this.layoutFromNode(curNode,farthestColumn);
 			}
 			else if (+curNode.id[5] >= 4) {
-				if (this.edgeDict[curNode.id] == undefined || this.edgeDict[curNode.id].length == 0) {
+				if (this.edges[curNode.id] == undefined || this.edges[curNode.id].length == 0) {
 					this.setColNum(curNode,this.columnList.length-1,true);
 				}
 			}
@@ -266,12 +265,12 @@ export class GraphComponent implements OnInit {
 		if (node.column != colNum) {
 			this.setColNum(node,colNum, allowOverride);
 		}
-		if (this.edgeDict[node.id]) {
-			for (let edge of this.edgeDict[node.id]) {
+		if (this.edges[node.id]) {
+			for (let edge of this.edges[node.id]) {
 				if (edge.endNodeID == node.id) {
 					//only re-layout a node if we are its greatest column dependency, unless we are not allowing overrides in the first place
-					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodeDict[edge.startNodeID]) > node.column)) {
-						this.layoutFromNode(this.nodeDict[edge.startNodeID],colNum+1,allowOverride);
+					if ((!allowOverride) || !(this.nodeLargestColumnDependency(this.nodes[edge.startNodeID]) > node.column)) {
+						this.layoutFromNode(this.nodes[edge.startNodeID],colNum+1,allowOverride);
 					}
 				}
 			}	
@@ -285,10 +284,10 @@ export class GraphComponent implements OnInit {
 	*/
 	nodeLargestColumnDependency(node : any) {
 		var maxCol = 0;
-		for (let edge of this.edgeDict[node.id]) {
+		for (let edge of this.edges[node.id]) {
 			if (edge.startNodeID == node.id) {
-				if (this.nodeDict[edge.endNodeID].column > maxCol) {
-					maxCol = this.nodeDict[edge.endNodeID].column;
+				if (this.nodes[edge.endNodeID].column > maxCol) {
+					maxCol = this.nodes[edge.endNodeID].column;
 				}
 			}
 		}
@@ -341,7 +340,7 @@ export class GraphComponent implements OnInit {
 	moveToNearestColumn(node : any) {
 		//base case: if we release a node past the left side of the screen, return it to column 0
 		if (node.x < 0) {
-			node.col = 0;
+			node.column = 0;
 		}
 		else {
 			let colNum = -1;
@@ -349,7 +348,7 @@ export class GraphComponent implements OnInit {
 			while (colBounds == null || node.x > colBounds.min - this.colHalfSpace) {
 				colBounds = this.calculateColumnBounds(++colNum);
 			}
-			node.col = colNum-1;
+			this.setColNum(node,colNum-1,true);
 		}
 
 
@@ -390,9 +389,9 @@ export class GraphComponent implements OnInit {
 	drawNodes() {
 		//first draw node bodies
 		this.ctx.lineWidth = this.nodeStrokeWidth;
-		for(var key in this.testNodes) { 
-   			if (this.testNodes.hasOwnProperty(key)) {
-				let curNode : any = this.testNodes[key];
+		for(var key in this.nodes) { 
+   			if (this.nodes.hasOwnProperty(key)) {
+				let curNode : any = this.nodes[key];
 				this.ctx.beginPath();
 				this.ctx.arc(curNode.x,curNode.y,this.nodeRadius,0,2*Math.PI);
 				this.ctx.strokeStyle = curNode.state == "hover" ? this.nodeStrokeHoverColor : this.nodeStrokeColor;
@@ -405,9 +404,9 @@ export class GraphComponent implements OnInit {
 		//next draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
 		this.ctx.fillStyle = this.nodeLabelColor;
-		for(var key in this.testNodes) { 
-   			if (this.testNodes.hasOwnProperty(key)) {
-				let curNode : any = this.testNodes[key];
+		for(var key in this.nodes) { 
+   			if (this.nodes.hasOwnProperty(key)) {
+				let curNode : any = this.nodes[key];
 				let labelWidth = this.ctx.measureText(curNode.name).width;
 				this.ctx.fillText(curNode.name,curNode.x - labelWidth/2,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2);
 			}
@@ -438,9 +437,9 @@ export class GraphComponent implements OnInit {
 	**/
 	updateNodes() {
 		//first pass: move dragged node
-		for(var key in this.testNodes) { 
-   			if (this.testNodes.hasOwnProperty(key)) {
-				let curNode : any = this.testNodes[key];
+		for(var key in this.nodes) { 
+   			if (this.nodes.hasOwnProperty(key)) {
+				let curNode : any = this.nodes[key];
 				if (curNode.state == "drag") {
 					if (!this.mouseHeld) {
 						curNode.state = "idle";
@@ -460,9 +459,9 @@ export class GraphComponent implements OnInit {
 		}
 
 		//second pass: move non-dragged nodes
-		for(var key in this.testNodes) { 
-   			if (this.testNodes.hasOwnProperty(key)) {
-				let curNode : any = this.testNodes[key];
+		for(var key in this.nodes) { 
+   			if (this.nodes.hasOwnProperty(key)) {
+				let curNode : any = this.nodes[key];
 				if (curNode.state == "drag") {
 					continue;
 				}
@@ -484,16 +483,16 @@ export class GraphComponent implements OnInit {
 
 				let x1 = curNode.x;
 				let y1 = curNode.y;
-				for(var key2 in this.testNodes) { 
-   					if (this.testNodes.hasOwnProperty(key2)) {
-						let nextNode : any = this.testNodes[key2];
+				for(var key2 in this.nodes) { 
+   					if (this.nodes.hasOwnProperty(key2)) {
+						let nextNode : any = this.nodes[key2];
 						//don't affect self
 						if (curNode == nextNode) {
 							continue;
 						}
 
 						//don't attract across columns
-						if (curNode.col != nextNode.col) {
+						if (curNode.column != nextNode.column) {
 							continue;
 						}
 						let x2 = nextNode.x;
@@ -530,9 +529,9 @@ export class GraphComponent implements OnInit {
 		}
 
 		//keep nodes within columns, unless they are being dragged
-		for(var key in this.testNodes) { 
-   			if (this.testNodes.hasOwnProperty(key)) {
-				let curNode : any = this.testNodes[key];
+		for(var key in this.nodes) { 
+   			if (this.nodes.hasOwnProperty(key)) {
+				let curNode : any = this.nodes[key];
 				if (curNode.state == "drag") {
 					continue;
 				}
@@ -547,7 +546,7 @@ export class GraphComponent implements OnInit {
 	**/
 	keepNodeInColumn(node) {
 		//x bounds
-		let colBounds = this.calculateColumnBounds(node.col);
+		let colBounds = this.calculateColumnBounds(node.column);
 
 		if (node.x - this.nodeRadius < colBounds.min) {
 			node.x = colBounds.min + this.nodeRadius;
