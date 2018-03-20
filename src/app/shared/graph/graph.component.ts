@@ -513,7 +513,7 @@ export class GraphComponent implements OnInit {
 			}
 
 			//check if hovering
-			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,curNode.x,curNode.y,this.nodeRadius,true)) {
+			if (this.ptInCircle(this.mousePos.x,this.mousePos.y,curNode.x,curNode.y,this.nodeRadius + this.nodeStrokeWidth,true)) {
 				curNode.state = "hover";
 			}
 			else {
@@ -552,8 +552,8 @@ export class GraphComponent implements OnInit {
 				let dist = this.ptDist(x1,y1,x2,y2);
 
 				//first bump out any collisions
-				if (dist < 2*this.nodeRadius) {
-					let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius - dist);
+				if (dist < 2*this.nodeRadius+this.nodeStrokeWidth) {
+					let newPos = this.applyForce(x2,y2,x1,y1,false,2*this.nodeRadius+this.nodeStrokeWidth - dist);
 					x2 = newPos[0];
 					y2 = newPos[1];
 					nextNode.x = x2;
@@ -597,23 +597,23 @@ export class GraphComponent implements OnInit {
 		//x bounds
 		let colBounds = this.calculateColumnBounds(node.column);
 
-		if (node.x - this.nodeRadius < colBounds.min) {
-			node.x = colBounds.min + this.nodeRadius;
+		if (node.x - this.nodeRadius-this.nodeStrokeWidth < colBounds.min) {
+			node.x = colBounds.min + this.nodeRadius+this.nodeStrokeWidth;
 		}
 
-		if (node.x + this.nodeRadius > colBounds.max) {
-			node.x = colBounds.max - this.nodeRadius;
+		if (node.x + this.nodeRadius+this.nodeStrokeWidth > colBounds.max) {
+			node.x = colBounds.max - this.nodeRadius-this.nodeStrokeWidth;
 		}
 
 		//y bounds
 		let yMin = this.toolbarHeight + this.colTopBuffer;
 		let yMax = yMin + this.colHeight;
-		if (node.y - this.nodeRadius < yMin) {
-			node.y = yMin + this.nodeRadius;
+		if (node.y - this.nodeRadius-this.nodeStrokeWidth < yMin) {
+			node.y = yMin + this.nodeRadius+this.nodeStrokeWidth;
 		}
 
-		if (node.y + this.nodeRadius > yMax) {
-			node.y = yMax - this.nodeRadius;
+		if (node.y + this.nodeRadius+this.nodeStrokeWidth > yMax) {
+			node.y = yMax - this.nodeRadius-this.nodeStrokeWidth;
 		}
 	}
 
