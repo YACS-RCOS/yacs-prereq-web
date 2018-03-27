@@ -37,6 +37,12 @@ export class GraphComponent implements OnInit {
 			this.mouseHeldLeft = true;
 		}
 
+		//middle mouse button
+		else if (e.which == 2) {
+			this.mouseClickedMiddle = true;
+			this.mouseHeldMiddle = true;
+		}
+
 		//right mouse button
 		else if (e.which == 3) {
 			this.mouseClickedRight = true;
@@ -48,6 +54,11 @@ export class GraphComponent implements OnInit {
 		if (e.which == 1) {
 			this.mouseHeldLeft = false;
 		}
+
+		else if (e.which == 2) {
+			this.mouseHeldMiddle = false;
+		}
+
 		else if (e.which == 3) {
 			this.mouseHeldRight = false;
 		}
@@ -119,8 +130,10 @@ export class GraphComponent implements OnInit {
 	//mouse state
 	private mousePos : any = {x:-1,y:-1};
 	private mouseHeldLeft : Boolean = false;
+	private mouseHeldMiddle : Boolean = false;
 	private mouseHeldRight : Boolean = false;
 	private mouseClickedLeft : Boolean = false;
+	private mouseClickedMiddle : Boolean = false;
 	private mouseClickedRight : Boolean = false;
 	//semester names
 	private semesterNames : any = ["Fall 2018", "Spring 2019", "Fall 2019", "Spring 2020", "Fall 2020", "Spring 2021", "Fall 2021", "Spring 2022"];
@@ -421,16 +434,6 @@ export class GraphComponent implements OnInit {
 			this.ctx.fillStyle = curNode.state == "hover" ? this.nodeHoverColor : this.nodeColor;
 			this.ctx.fill();
 			this.ctx.stroke();
-
-			//draw a lock symbol if the node is locked
-			if (curNode.locked) {
-				this.ctx.fillStyle = "rgba(25,25,25,1)";
-				this.ctx.strokeStyle = "rgba(25,25,25,1)";
-				this.ctx.fillRect(curNode.x - this.nodeRadius/2,curNode.y - this.nodeRadius/2, 8,7);
-				this.ctx.beginPath();
-				this.ctx.arc(curNode.x - this.nodeRadius/2 + 4,curNode.y - this.nodeRadius/2,3,Math.PI,2*Math.PI);
-				this.ctx.stroke();
-			}
 		}
 
 		//next draw edges
@@ -448,6 +451,20 @@ export class GraphComponent implements OnInit {
 					this.ctx.globalAlpha = this.nodes[curEdge[i].startNodeID].hidden || this.nodes[curEdge[i].endNodeID].hidden ? this.hiddenAlpha : 1;
 					this.ctx.stroke();
 				}
+			}
+		}
+
+		//draw node lock status
+		for (var key in this.nodes) {
+			let curNode = this.nodes[key];
+			//draw a lock symbol if the node is locked
+			if (curNode.locked) {
+				this.ctx.fillStyle = "rgba(25,25,25,1)";
+				this.ctx.strokeStyle = "rgba(25,25,25,1)";
+				this.ctx.fillRect(curNode.x - this.nodeRadius/2,curNode.y - this.nodeRadius/2, 8,7);
+				this.ctx.beginPath();
+				this.ctx.arc(curNode.x - this.nodeRadius/2 + 4,curNode.y - this.nodeRadius/2,2.8,Math.PI,2*Math.PI);
+				this.ctx.stroke();
 			}
 		}
 
@@ -539,6 +556,9 @@ export class GraphComponent implements OnInit {
 			if (curNode.state == "hover") {
 				if (this.mouseClickedLeft) {
 					curNode.state = "drag";
+				}
+				else if (this.mouseClickedMiddle) {
+					this.hideNode(curNode.id);
 				}
 				else if (this.mouseClickedRight) {
 					this.lockNode(curNode.id);
@@ -715,6 +735,7 @@ export class GraphComponent implements OnInit {
 		requestAnimationFrame(this.update.bind(this));
 		//reset 1-frame mouse events
 		this.mouseClickedLeft = false;
+		this.mouseClickedMiddle = false;
 		this.mouseClickedRight = false;
 	}
 
