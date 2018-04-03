@@ -215,6 +215,7 @@ export class GraphComponent implements OnInit {
 		//console.log(this);
 		localStorage.setItem("nodes", JSON.stringify(this.nodes));
 		localStorage.setItem("edges", JSON.stringify(this.edges));
+		localStorage.setItem("columns", JSON.stringify(this.columnList));
 	}
 
 	/**
@@ -225,6 +226,7 @@ export class GraphComponent implements OnInit {
 		if (loadedNodes != undefined && loadedNodes != "null") {
 			this.nodes = JSON.parse(loadedNodes);
 			this.edges = JSON.parse(localStorage.getItem("edges"));
+			this.columnList = JSON.parse(localStorage.getItem("columns"));
 		}
 	}
 
@@ -283,8 +285,8 @@ export class GraphComponent implements OnInit {
 	**/
 	layoutColumns() {
 		//start by laying out nodes branching from first column (nodes with no dependencies)
-		for (let node of this.columnList[0]) {
-			this.layoutFromNode(node,0);	
+		for (let nodeId of this.columnList[0]) {
+			this.layoutFromNode(this.nodes[nodeId],0);	
 		}
 
 		//move meta nodes to the same column as their farthest contained node, and stick lone 4000+ level classes at the end
@@ -377,17 +379,17 @@ export class GraphComponent implements OnInit {
 			if (node.column != -1) {
 				//remove from current column
 				let oldColumn = this.columnList[node.column];
-				let oldIndex = oldColumn.indexOf(node);
+				let oldIndex = oldColumn.indexOf(node.id);
 				oldColumn.splice(oldIndex,1);
 				//reposition displaced nodes
 				for (let i = oldIndex; i <oldColumn.length; ++i) {
-					this.columnList[node.column][i].column = node.column;
+					this.nodes[this.columnList[node.column][i]].column = node.column;
 					
 				}
 			}
 			
 			//add to new column
-			this.columnList[colNum].push(node);
+			this.columnList[colNum].push(node.id);
 			node.column = colNum;
 		}
 	}
