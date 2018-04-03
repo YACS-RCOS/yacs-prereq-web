@@ -24,6 +24,7 @@ export class GraphComponent implements OnInit {
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
 	@ViewChild('saveglyph') saveImgRef: ElementRef;
+	@ViewChild('saveHoverglyph') saveHoverImgRef: ElementRef;
 
 	//add mouse click and position event listeners to the document so we can interact with the graph
 	@HostListener('document:mousemove', ['$event']) 
@@ -149,6 +150,9 @@ export class GraphComponent implements OnInit {
 	private nodeRepelForce : number = 12;
 	private nodeRepelMaxDist : number = 75;
 
+	//buttons
+	private buttons : any = [];
+
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
 	**/
@@ -158,6 +162,9 @@ export class GraphComponent implements OnInit {
 		this.ctx = this.cnv.getContext("2d");
 		this.cnv.width = this.graphWidth;
 		this.cnv.height = this.graphHeight;
+
+		//init buttons
+		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement,'imageHover':this.saveHoverImgRef.nativeElement, 'state':"idle"});
 	}
 
 	/**
@@ -403,7 +410,16 @@ export class GraphComponent implements OnInit {
 		this.drawSemesterColumns();
 		this.drawNodes();
 		this.drawToolbar();
-		
+		this.drawButtons();
+	}
+
+	/**
+	draw UI buttons
+	**/
+	drawButtons() {
+		for (let i : number = 0; i < this.buttons.length; ++i) {
+			this.ctx.drawImage(this.buttons[i].state == "hover" ? this.buttons[i].imageHover : this.buttons[i].image, this.buttons[i].x,this.buttons[i].y,this.buttons[i].width,this.buttons[i].height,);
+		}
 	}
 
 	/**
@@ -546,6 +562,30 @@ export class GraphComponent implements OnInit {
 				this.toolbarHeight + this.colTopBuffer + this.colLabelFontSize);
 		}
 
+	}
+
+	/**
+	update all UI buttons
+	**/
+	updateButtons() {
+		for (let i : number = 0; i < this.buttons.length; ++i) {
+			if (this.mouseOverButton(this.buttons[i])) {
+				this.buttons[i].state = "hover";
+			}
+			else {
+				this.buttons[i].state = "idle";
+			}
+		}
+	}
+
+	/**
+	check if the mouse is hovering over the specified buttons
+	@param {any} button the button to check against the mouse position
+	@return {Boolean} whether the mouse is hovering over the specified button (true) or not (false)
+	**/
+	mouseOverButton(button : any) {
+		return this.mousePos.x >= button.x && this.mousePos.x <= button.x + button.width
+		&& this.mousePos.y >= button.y && this.mousePos.y <= button.y + button.height;
 	}
 
 	/**
@@ -775,6 +815,7 @@ export class GraphComponent implements OnInit {
 	**/
 	update() {
 		this.updateNodes();
+		this.updateButtons();
 		this.redrawScreen();
 		requestAnimationFrame(this.update.bind(this));
 		//reset 1-frame mouse events
