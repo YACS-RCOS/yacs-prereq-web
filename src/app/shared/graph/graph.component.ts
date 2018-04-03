@@ -405,7 +405,7 @@ export class GraphComponent implements OnInit {
 		}
 		//base case: if we release a node past the left side of the screen, return it to column 0
 		if (node.x < 0) {
-			node.x = 0;
+			node.x = 1;
 		}
 		let colNum = -1;
 		let colBounds = null;
