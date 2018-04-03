@@ -24,7 +24,6 @@ export class GraphComponent implements OnInit {
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
 	@ViewChild('saveglyph') saveImgRef: ElementRef;
-	@ViewChild('saveHoverglyph') saveHoverImgRef: ElementRef;
 
 	//add mouse click and position event listeners to the document so we can interact with the graph
 	@HostListener('document:mousemove', ['$event']) 
@@ -164,7 +163,7 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.graphHeight;
 
 		//init buttons
-		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement,'imageHover':this.saveHoverImgRef.nativeElement, 'state':"idle"});
+		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement, 'state':"idle"});
 	}
 
 	/**
@@ -418,8 +417,10 @@ export class GraphComponent implements OnInit {
 	**/
 	drawButtons() {
 		for (let i : number = 0; i < this.buttons.length; ++i) {
-			this.ctx.drawImage(this.buttons[i].state == "hover" ? this.buttons[i].imageHover : this.buttons[i].image, this.buttons[i].x,this.buttons[i].y,this.buttons[i].width,this.buttons[i].height,);
+			this.ctx.globalAlpha = this.buttons[i].state == "hover" ? 1 : .6;
+			this.ctx.drawImage(this.buttons[i].image, this.buttons[i].x,this.buttons[i].y,this.buttons[i].width,this.buttons[i].height,);
 		}
+		this.ctx.globalAlpha = 1;
 	}
 
 	/**
