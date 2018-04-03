@@ -24,6 +24,7 @@ export class GraphComponent implements OnInit {
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
 	@ViewChild('saveglyph') saveImgRef: ElementRef;
+	@ViewChild('loadglyph') loadImgRef: ElementRef;
 
 	//add mouse click and position event listeners to the document so we can interact with the graph
 	@HostListener('document:mousemove', ['$event']) 
@@ -163,7 +164,8 @@ export class GraphComponent implements OnInit {
 		this.cnv.height = this.graphHeight;
 
 		//init buttons
-		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement, 'state':"idle"});
+		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement, 'state':"idle", 'function':this.saveGraph.bind(this)});
+		this.buttons.push({'x':38,'y':4,'width':20,'height':20,'image':this.loadImgRef.nativeElement, 'state':"idle", 'function':this.loadGraph.bind(this)});
 	}
 
 	/**
@@ -204,6 +206,26 @@ export class GraphComponent implements OnInit {
 
 		//begin the graph update loop
 		this.update();
+	}
+
+	/**
+	save the current state of the graph to HTML5 local storage
+	**/
+	saveGraph() {
+		//console.log(this);
+		localStorage.setItem("nodes", JSON.stringify(this.nodes));
+		localStorage.setItem("edges", JSON.stringify(this.edges));
+	}
+
+	/**
+	load the state of the graph from HTML5 local storage
+	**/
+	loadGraph() {
+		let loadedNodes = localStorage.getItem("nodes");
+		if (loadedNodes != undefined && loadedNodes != "null") {
+			this.nodes = JSON.parse(loadedNodes);
+			this.edges = JSON.parse(localStorage.getItem("edges"));
+		}
 	}
 
 	/**
@@ -572,6 +594,9 @@ export class GraphComponent implements OnInit {
 		for (let i : number = 0; i < this.buttons.length; ++i) {
 			if (this.mouseOverButton(this.buttons[i])) {
 				this.buttons[i].state = "hover";
+				if (this.mouseClickedLeft) {
+					this.buttons[i].function();
+				}
 			}
 			else {
 				this.buttons[i].state = "idle";
