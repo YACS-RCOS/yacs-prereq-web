@@ -86,7 +86,9 @@ export class GraphComponent implements OnInit {
 	//~node label visuals~
 	private nodeLabelColor : any = "rgba(0,0,240,1)";
 	private nodeLabelHoverColor : any = "rgba(60,60,255,1)";
+	private nodeContainsColor : any = "rgba(255,255,255,1)";
 	private nodeLabelFontSize : number = 18; 
+	private nodeContainsFontSize : number = 12; 
 
 	//~graph visuals~
 	private bgColor : any = "rgba(255,255,255,1)";
@@ -470,7 +472,7 @@ export class GraphComponent implements OnInit {
 		}
 
 
-		//finally draw node titles
+		//draw node titles
 		this.ctx.font = this.nodeLabelFontSize + "px Arial";
 		for(var key in this.nodes) { 
 			let curNode : any = this.nodes[key];
@@ -483,6 +485,20 @@ export class GraphComponent implements OnInit {
 
 		//reset global alpha after node rendering so as not to affect other components
 		this.ctx.globalAlpha = 1;
+
+		//draw contained nodes when hovering over META nodes
+		for (var key in this.nodes) {
+			let curNode : any = this.nodes[key];
+			if (curNode.state == "hover") {
+				if (curNode.containedNodeIds != null) {
+					this.ctx.font = this.nodeContainsFontSize + "px Arial";
+					this.ctx.fillStyle = this.nodeContainsColor;
+					for (var i : any = 0; i < curNode.containedNodeIds.length; ++i) {
+						this.ctx.fillText(curNode.containedNodeIds[i],curNode.x + this.nodeRadius,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2 + this.nodeContainsFontSize * (i+1));
+					}
+				}
+			}
+		}
 	}
 
 	/**
