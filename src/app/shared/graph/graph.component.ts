@@ -369,21 +369,19 @@ export class GraphComponent implements OnInit {
 		}
 		//base case: if we release a node past the left side of the screen, return it to column 0
 		if (node.x < 0) {
-			node.column = 0;
+			node.x = 0;
 		}
-		else {
-			let colNum = -1;
-			let colBounds = null;
-			while (colBounds == null || node.x > colBounds.min - this.colHalfSpace) {
-				colBounds = this.calculateColumnBounds(++colNum);
-			}
-			var desiredColumn = colNum-1;
-			var startColumn = node.column;
-			//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
-			while (startColumn != desiredColumn) {
-				startColumn += (startColumn > desiredColumn ? -1 : 1);
-				this.layoutFromNode(node,startColumn,true);
-			}
+		let colNum = -1;
+		let colBounds = null;
+		while (colBounds == null || node.x > colBounds.min - this.colHalfSpace) {
+			colBounds = this.calculateColumnBounds(++colNum);
+		}
+		var desiredColumn = colNum-1;
+		var startColumn = node.column;
+		//run the layouting process one column at a time as jumping multiple columns may cause nodes to be left behind
+		while (startColumn != desiredColumn) {
+			startColumn += (startColumn > desiredColumn ? -1 : 1);
+			this.layoutFromNode(node,startColumn,true);
 		}
 	}
   
@@ -449,6 +447,9 @@ export class GraphComponent implements OnInit {
 					this.ctx.strokeStyle = this.nodes[curEdge[i].startNodeID].state == "hover" || this.nodes[curEdge[i].endNodeID].state == "hover" ?
 					this.edgeHoverColor : this.edgeColor;
 					this.ctx.globalAlpha = this.nodes[curEdge[i].startNodeID].hidden || this.nodes[curEdge[i].endNodeID].hidden ? this.hiddenAlpha : 1;
+					//draw ball sockets at each end of the edge
+					//this.ctx.arc(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y,3,0,2*Math.PI);
+					//this.ctx.arc(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y,3,0,2*Math.PI);
 					this.ctx.stroke();
 				}
 			}
@@ -459,8 +460,8 @@ export class GraphComponent implements OnInit {
 			let curNode = this.nodes[key];
 			//draw a lock symbol if the node is locked
 			if (curNode.locked) {
-				this.ctx.fillStyle = "rgba(25,25,25,1)";
 				this.ctx.strokeStyle = "rgba(25,25,25,1)";
+				this.ctx.fillStyle = "rgba(25,25,25,1)";
 				this.ctx.fillRect(curNode.x - this.nodeRadius/2,curNode.y - this.nodeRadius/2, 8,7);
 				this.ctx.beginPath();
 				this.ctx.arc(curNode.x - this.nodeRadius/2 + 4,curNode.y - this.nodeRadius/2,2.8,Math.PI,2*Math.PI);
