@@ -23,6 +23,7 @@ export class GraphComponent implements OnInit {
 	//grab references to our graph and canvas
 	@ViewChild('graph') private graphContainer: ElementRef;
 	@ViewChild('graphCanvas') canvasRef: ElementRef;
+	@ViewChild('saveglyph') saveImgRef: ElementRef;
 
 	//add mouse click and position event listeners to the document so we can interact with the graph
 	@HostListener('document:mousemove', ['$event']) 
@@ -89,7 +90,6 @@ export class GraphComponent implements OnInit {
 	private nodeContainsColor : any = "rgba(255,255,255,1)";
 	private nodeLabelFontSize : number = 18; 
 	private nodeContainsFontSize : number = 12; 
-
 	private nodeContainsPopupBackgroundColor : any = "rgba(0,0,0,1)";
 	private nodeContainsPopupStrokeColor : any = "rgba(20,20,20,1)";
 	private nodeContainsPopupStrokeWidth : number = 1;
@@ -403,6 +403,7 @@ export class GraphComponent implements OnInit {
 		this.drawSemesterColumns();
 		this.drawNodes();
 		this.drawToolbar();
+		
 	}
 
 	/**
@@ -504,6 +505,13 @@ export class GraphComponent implements OnInit {
 					this.roundRect(this.ctx,curNode.x + this.nodeRadius - this.nodeContainsFontSize/4,curNode.y - this.nodeRadius - this.nodeContainsFontSize/4,
 						largestWidth + this.nodeContainsFontSize/2, this.nodeContainsFontSize * (curNode.containedNodeIds.length + 1), 
 						this.nodeContainsPopupBackgroundColor,this.nodeContainsPopupStrokeColor, this.nodeContainsPopupStrokeWidth, 8,true,true);
+
+					//draw a triangle indicator extending out from the popup box
+					this.ctx.beginPath();
+				    this.ctx.moveTo(curNode.x + this.nodeRadius - this.nodeContainsFontSize/4 - 10, curNode.y);
+				    this.ctx.lineTo(curNode.x + this.nodeRadius - this.nodeContainsFontSize/4, curNode.y - 5);
+				    this.ctx.lineTo(curNode.x + this.nodeRadius - this.nodeContainsFontSize/4, curNode.y + 5);
+				    this.ctx.fill();
 
 					//now draw the contained nodes
 					this.ctx.font = this.nodeContainsFontSize + "px Arial";
