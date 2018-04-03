@@ -466,6 +466,7 @@ export class GraphComponent implements OnInit {
 			let curNode = this.nodes[key];
 			//draw a lock symbol if the node is locked
 			if (curNode.locked) {
+				this.ctx.globalAlpha = curNode.hidden ? this.hiddenAlpha : 1;
 				this.ctx.strokeStyle = "rgba(25,25,25,1)";
 				this.ctx.fillStyle = "rgba(25,25,25,1)";
 				this.ctx.fillRect(curNode.x - this.nodeRadius/2,curNode.y - this.nodeRadius/2, 8,7);
@@ -491,7 +492,7 @@ export class GraphComponent implements OnInit {
 		//draw contained nodes when hovering over META nodes
 		for (var key in this.nodes) {
 			let curNode : any = this.nodes[key];
-			if (curNode.state == "hover") {
+			if (!curNode.hidden && curNode.state == "hover") {
 				if (curNode.containedNodeIds != null) {
 					//determine the width of the largest contained node id
 					let largestWidth : number = -1;
@@ -593,6 +594,7 @@ export class GraphComponent implements OnInit {
 				}
 				else if (this.mouseClickedMiddle) {
 					this.hideNode(curNode.id);
+					curNode.state = "idle";
 				}
 				else if (this.mouseClickedRight) {
 					this.lockNode(curNode.id);
