@@ -90,6 +90,10 @@ export class GraphComponent implements OnInit {
 	private nodeLabelFontSize : number = 18; 
 	private nodeContainsFontSize : number = 12; 
 
+	private nodeContainsPopupBackgroundColor : any = "rgba(0,0,0,1)";
+	private nodeContainsPopupStrokeColor : any = "rgba(20,20,20,1)";
+	private nodeContainsPopupStrokeWidth : number = 1;
+
 	//~graph visuals~
 	private bgColor : any = "rgba(255,255,255,1)";
 	private graphWidth : number = 1580;
@@ -483,22 +487,35 @@ export class GraphComponent implements OnInit {
 		
 		}
 
-		//reset global alpha after node rendering so as not to affect other components
-		this.ctx.globalAlpha = 1;
-
+		this.ctx.globalAlpha = .7;
 		//draw contained nodes when hovering over META nodes
 		for (var key in this.nodes) {
 			let curNode : any = this.nodes[key];
 			if (curNode.state == "hover") {
 				if (curNode.containedNodeIds != null) {
+					//determine the width of the largest contained node id
+					let largestWidth : number = -1;
+					for (var i : number = 0; i < curNode.containedNodeIds.length; ++i) {
+						largestWidth = Math.max(largestWidth,this.ctx.measureText(curNode.id).width);
+					}
+
+					//draw a popup box to house the contained nodes text
+					this.roundRect(this.ctx,curNode.x + this.nodeRadius - this.nodeContainsFontSize/4,curNode.y - this.nodeRadius - this.nodeContainsFontSize/4,
+						largestWidth + this.nodeContainsFontSize/2, this.nodeContainsFontSize * (curNode.containedNodeIds.length + 1), 
+						this.nodeContainsPopupBackgroundColor,this.nodeContainsPopupStrokeColor, this.nodeContainsPopupStrokeWidth, 8,true,true);
+
+					//now draw the contained nodes
 					this.ctx.font = this.nodeContainsFontSize + "px Arial";
 					this.ctx.fillStyle = this.nodeContainsColor;
-					for (var i : any = 0; i < curNode.containedNodeIds.length; ++i) {
-						this.ctx.fillText(curNode.containedNodeIds[i],curNode.x + this.nodeRadius,curNode.y - this.nodeRadius - this.nodeLabelFontSize/2 + this.nodeContainsFontSize * (i+1));
+					for (var i : number = 0; i < curNode.containedNodeIds.length; ++i) {
+						this.ctx.fillText(curNode.containedNodeIds[i],curNode.x + this.nodeRadius,curNode.y - this.nodeRadius + this.nodeContainsFontSize * (i+1));
 					}
 				}
 			}
 		}
+
+		//reset global alpha after node rendering so as not to affect other components
+		this.ctx.globalAlpha = 1;
 	}
 
 	/**
