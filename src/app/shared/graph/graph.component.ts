@@ -153,6 +153,10 @@ export class GraphComponent implements OnInit {
 	//buttons
 	private buttons : any = [];
 
+
+	//version identification
+	private verNum : number = 1;
+
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
 	**/
@@ -212,7 +216,7 @@ export class GraphComponent implements OnInit {
 	save the current state of the graph to HTML5 local storage
 	**/
 	saveGraph() {
-		//console.log(this);
+		localStorage.setItem("version",this.verNum.toString());
 		localStorage.setItem("nodes", JSON.stringify(this.nodes));
 		localStorage.setItem("edges", JSON.stringify(this.edges));
 		localStorage.setItem("columns", JSON.stringify(this.columnList));
@@ -222,6 +226,12 @@ export class GraphComponent implements OnInit {
 	load the state of the graph from HTML5 local storage
 	**/
 	loadGraph() {
+		//disallow loading old versions
+		if (localStorage.getItem("version") != this.verNum.toString()) {
+			console.log("Error: attempting to load a schedule of version " + localStorage.getItem("version") + " but current version is " + this.verNum.toString());
+			return;
+		}
+
 		let loadedNodes = localStorage.getItem("nodes");
 		if (loadedNodes != undefined && loadedNodes != "null") {
 			this.nodes = JSON.parse(loadedNodes);
