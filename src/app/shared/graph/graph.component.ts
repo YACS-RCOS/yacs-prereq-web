@@ -383,8 +383,8 @@ export class GraphComponent implements OnInit {
 			colNum = this.numColumns - 1;
 		}
 
-		//disallow moving a locked node
-		if (node.locked) {
+		//disallow moving a locked node, unless its column is hidden
+		if (node.locked && !this.hiddenColumns[node.column]) {
 			return;
 		}
 
