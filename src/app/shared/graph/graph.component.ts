@@ -589,6 +589,7 @@ export class GraphComponent implements OnInit {
 	**/
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
+			this.ctx.globalAlpha = this.hiddenColumns[i] ? this.hiddenAlpha : 1;
 			//draw column rect
 			let columnXMin = i*this.colWidth;
 			this.roundRect(this.ctx,columnXMin + this.colHalfSpace + this.columnStrokeWidth/2, this.toolbarHeight + this.colTopBuffer + this.columnStrokeWidth/2,
@@ -602,6 +603,7 @@ export class GraphComponent implements OnInit {
 			this.ctx.fillText(this.semesterNames[i],columnXMin + this.colHalfSpace + (this.colWidth - this.colHalfSpace*2)/2 - labelWidth/2,
 				this.toolbarHeight + this.colTopBuffer + this.colLabelFontSize);
 		}
+		this.ctx.globalAlpha = 1;
 
 	}
 
@@ -769,9 +771,24 @@ export class GraphComponent implements OnInit {
 					let colBounds : any = this.calculateColumnBounds(i);
 					if (this.ptInRect(this.mousePos.x,this.mousePos.y,colBounds.min,colBounds.max,colYMin,colYMax,true)) {
 						//a semester column was right clicked; hide it
-						this.hiddenColumns[i] = !this.hiddenColumns[i];
+						this.toggleColumnVisibility(i);
 					}
 				}
+			}
+		}
+	}
+
+	/**
+	toggle visibility of the specified column
+	@param {number} colNum the number of the column to hide or unhide 
+	**/
+	toggleColumnVisibility(colNum) {
+		this.hiddenColumns[colNum] = !this.hiddenColumns[colNum];
+		//relayout all nodes in the column behind the one we just toggled
+		for(var key in this.nodes) {
+			let curNode : any = this.nodes[key];
+			if (curNode.column == colNum-1) {
+				this.layoutFromNode(curNode,curNode.column, true);
 			}
 		}
 	}
@@ -920,8 +937,7 @@ export class GraphComponent implements OnInit {
 	 * @param {Number} y The top left y coordinate
 	 * @param {Number} width The width of the rectangle
 	 * @param {Number} height The height of the rectangle
-	 * @param {Number} [radius = 5] The corner radius; It can also be an object 
-	 *                 to specify different radii for corners
+	 * @param {Number} [radius = 5] The corner radius; It can also be an object to specify different radii for corners
 	 * @param {Number} [radius.tl = 0] Top left
 	 * @param {Number} [radius.tr = 0] Top right
 	 * @param {Number} [radius.br = 0] Bottom right
