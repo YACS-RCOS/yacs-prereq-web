@@ -331,6 +331,9 @@ export class GraphComponent implements OnInit {
 	@param {Boolean} allowOverride whether or not we should allow column overriding while laying out nodes
 	**/
 	layoutFromNode(node : any, colNum : number, allowOverride : boolean = false) {
+		while (this.hiddenColumns[colNum]) {
+			++colNum;
+		}
 		if (node.column != colNum) {
 			this.setColNum(node,colNum, allowOverride);
 		}
@@ -784,12 +787,10 @@ export class GraphComponent implements OnInit {
 	**/
 	toggleColumnVisibility(colNum) {
 		this.hiddenColumns[colNum] = !this.hiddenColumns[colNum];
-		//relayout all nodes in the column behind the one we just toggled
+		//relayout all nodes
 		for(var key in this.nodes) {
 			let curNode : any = this.nodes[key];
-			if (curNode.column == colNum-1) {
-				this.layoutFromNode(curNode,curNode.column, true);
-			}
+			this.layoutFromNode(curNode,curNode.column, true);
 		}
 	}
 
