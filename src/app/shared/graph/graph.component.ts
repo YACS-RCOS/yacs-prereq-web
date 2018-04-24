@@ -134,6 +134,7 @@ export class GraphComponent implements OnInit {
 	private columnList : any = [];
 	//maintain the number of columns displayed by the graph
 	private numColumns : number = 8;
+	private hiddenColumns : any = [];
 	//mouse state
 	private mousePos : any = {x:-1,y:-1};
 	private mouseHeldLeft : Boolean = false;
@@ -170,6 +171,11 @@ export class GraphComponent implements OnInit {
 		//init buttons
 		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement, 'state':"idle", 'function':this.saveGraph.bind(this)});
 		this.buttons.push({'x':38,'y':4,'width':20,'height':20,'image':this.loadImgRef.nativeElement, 'state':"idle", 'function':this.loadGraph.bind(this)});
+
+		//init col state array
+		for (let i : number = 0; i < this.numColumns; ++i) {
+			this.hiddenColumns.push(false);
+		}
 	}
 
 	/**
@@ -506,8 +512,8 @@ export class GraphComponent implements OnInit {
 					this.edgeHoverColor : this.edgeColor;
 					this.ctx.globalAlpha = this.nodes[curEdge[i].startNodeID].hidden || this.nodes[curEdge[i].endNodeID].hidden ? this.hiddenAlpha : 1;
 					//draw ball sockets at each end of the edge
-					//this.ctx.arc(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y,3,0,2*Math.PI);
-					//this.ctx.arc(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y,3,0,2*Math.PI);
+					// this.ctx.arc(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y,2,0,2*Math.PI);
+					// this.ctx.arc(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y,2,0,2*Math.PI);
 					this.ctx.stroke();
 				}
 			}
@@ -737,12 +743,36 @@ export class GraphComponent implements OnInit {
 		}
 
 		//keep nodes within columns, unless they are being dragged
-	for(var key in this.nodes) { 
+		for(var key in this.nodes) { 
 			let curNode : any = this.nodes[key];
 			if (curNode.state == "drag") {
 				continue;
 			}
 			this.keepNodeInColumn(curNode);
+		}
+
+		//hide column on middle mouse click
+		if (this.mouseClickedRight) {
+			//make sure no nodes absorbed the click event
+			let nodeClicked : boolean = false;
+			for(var key in this.nodes) {
+				let curNode : any = this.nodes[key];
+				if (curNode.state != "idle") {
+					nodeClicked = true;
+				}
+			}
+			if (!nodeClicked) {
+				//check if any columns were clicked
+				let colYMin = this.toolbarHeight + this.colTopBuffer;
+				let colYMax = colYMin + this.colHeight;
+				for (let i : number = 0; i < this.numColumns; ++i) {
+					let colBounds : any = this.calculateColumnBounds(i);
+					if (this.ptInRect(this.mousePos.x,this.mousePos.y,colBounds.min,colBounds.max,colYMin,colYMax,true)) {
+						//a semester column was right clicked; hide it
+						this.hiddenColumns[i] = !this.hiddenColumns[i];
+					}
+				}
+			}
 		}
 	}
 
@@ -828,6 +858,24 @@ export class GraphComponent implements OnInit {
 			return this.ptDist(px,py,cx,cy) <= cr;	
 		}
 		return this.ptDist(px,py,cx,cy) < cr;
+	}
+
+	/**
+	check whether or not a point lies in a rectangle
+	@param {number} px the x coordinate of the point
+	@param {number} py the y coordinate of the point
+	@param {number} minX the left bound of the rect
+	@param {number} maxX the right bound of the rect
+	@param {number} minY the top bound of the rect
+	@param {number} maxY the bottom bound of the rect
+	@param {Boolean} includeTouching whether or not the point should be considered in the rect if they are merely touching
+	@return {Boolean} whether the specified point lies in the specified rect (true) or not (false)
+	**/
+	ptInRect(px,py,minX,maxX,minY,maxY, includeTouching) {
+		if (includeTouching) {
+			return px >= minX && px <= maxX && py >= minY && py <= maxY;
+		}
+		return px > minX && px < maxX && py > minY && py < maxY;
 	}
 
 	/**
