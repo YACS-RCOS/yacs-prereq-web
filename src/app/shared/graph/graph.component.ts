@@ -226,6 +226,7 @@ export class GraphComponent implements OnInit {
 		localStorage.setItem("nodes", JSON.stringify(this.nodes));
 		localStorage.setItem("edges", JSON.stringify(this.edges));
 		localStorage.setItem("columns", JSON.stringify(this.columnList));
+		localStorage.setItem("hiddenColumns",JSON.stringify(this.hiddenColumns));
 	}
 
 	/**
@@ -243,6 +244,7 @@ export class GraphComponent implements OnInit {
 			this.nodes = JSON.parse(loadedNodes);
 			this.edges = JSON.parse(localStorage.getItem("edges"));
 			this.columnList = JSON.parse(localStorage.getItem("columns"));
+			this.hiddenColumns = JSON.parse(localStorage.getItem("hiddenColumns"));
 		}
 	}
 
