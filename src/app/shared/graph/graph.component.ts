@@ -134,6 +134,7 @@ export class GraphComponent implements OnInit {
 	private columnList : any = [];
 	//maintain the number of columns displayed by the graph
 	private numColumns : number = 8;
+	private hiddenColumns : any = [];
 	//mouse state
 	private mousePos : any = {x:-1,y:-1};
 	private mouseHeldLeft : Boolean = false;
@@ -153,6 +154,10 @@ export class GraphComponent implements OnInit {
 	//buttons
 	private buttons : any = [];
 
+
+	//version identification
+	private verNum : number = 1;
+
 	/**
 	once ng is initialized, we setup our svg with the specified width and height constants
 	**/
@@ -166,6 +171,11 @@ export class GraphComponent implements OnInit {
 		//init buttons
 		this.buttons.push({'x':8,'y':4,'width':20,'height':20,'image':this.saveImgRef.nativeElement, 'state':"idle", 'function':this.saveGraph.bind(this)});
 		this.buttons.push({'x':38,'y':4,'width':20,'height':20,'image':this.loadImgRef.nativeElement, 'state':"idle", 'function':this.loadGraph.bind(this)});
+
+		//init col state array
+		for (let i : number = 0; i < this.numColumns; ++i) {
+			this.hiddenColumns.push(false);
+		}
 	}
 
 	/**
@@ -212,21 +222,29 @@ export class GraphComponent implements OnInit {
 	save the current state of the graph to HTML5 local storage
 	**/
 	saveGraph() {
-		//console.log(this);
+		localStorage.setItem("version",this.verNum.toString());
 		localStorage.setItem("nodes", JSON.stringify(this.nodes));
 		localStorage.setItem("edges", JSON.stringify(this.edges));
 		localStorage.setItem("columns", JSON.stringify(this.columnList));
+		localStorage.setItem("hiddenColumns",JSON.stringify(this.hiddenColumns));
 	}
 
 	/**
 	load the state of the graph from HTML5 local storage
 	**/
 	loadGraph() {
+		//disallow loading old versions
+		if (localStorage.getItem("version") != this.verNum.toString()) {
+			console.log("Error: attempting to load a schedule of version " + localStorage.getItem("version") + " but current version is " + this.verNum.toString());
+			return;
+		}
+
 		let loadedNodes = localStorage.getItem("nodes");
 		if (loadedNodes != undefined && loadedNodes != "null") {
 			this.nodes = JSON.parse(loadedNodes);
 			this.edges = JSON.parse(localStorage.getItem("edges"));
 			this.columnList = JSON.parse(localStorage.getItem("columns"));
+			this.hiddenColumns = JSON.parse(localStorage.getItem("hiddenColumns"));
 		}
 	}
 
@@ -315,6 +333,9 @@ export class GraphComponent implements OnInit {
 	@param {Boolean} allowOverride whether or not we should allow column overriding while laying out nodes
 	**/
 	layoutFromNode(node : any, colNum : number, allowOverride : boolean = false) {
+		while (this.hiddenColumns[colNum]) {
+			++colNum;
+		}
 		if (node.column != colNum) {
 			this.setColNum(node,colNum, allowOverride);
 		}
@@ -362,8 +383,8 @@ export class GraphComponent implements OnInit {
 			colNum = this.numColumns - 1;
 		}
 
-		//disallow moving a locked node
-		if (node.locked) {
+		//disallow moving a locked node, unless its column is hidden
+		if (node.locked && !this.hiddenColumns[node.column]) {
 			return;
 		}
 
@@ -405,7 +426,7 @@ export class GraphComponent implements OnInit {
 		}
 		//base case: if we release a node past the left side of the screen, return it to column 0
 		if (node.x < 0) {
-			node.x = 0;
+			node.x = 1;
 		}
 		let colNum = -1;
 		let colBounds = null;
@@ -496,8 +517,8 @@ export class GraphComponent implements OnInit {
 					this.edgeHoverColor : this.edgeColor;
 					this.ctx.globalAlpha = this.nodes[curEdge[i].startNodeID].hidden || this.nodes[curEdge[i].endNodeID].hidden ? this.hiddenAlpha : 1;
 					//draw ball sockets at each end of the edge
-					//this.ctx.arc(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y,3,0,2*Math.PI);
-					//this.ctx.arc(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y,3,0,2*Math.PI);
+					// this.ctx.arc(this.nodes[curEdge[i].startNodeID].x,this.nodes[curEdge[i].startNodeID].y,2,0,2*Math.PI);
+					// this.ctx.arc(this.nodes[curEdge[i].endNodeID].x,this.nodes[curEdge[i].endNodeID].y,2,0,2*Math.PI);
 					this.ctx.stroke();
 				}
 			}
@@ -573,6 +594,7 @@ export class GraphComponent implements OnInit {
 	**/
 	drawSemesterColumns() {
 		for (var i : number = 0; i < this.numColumns; ++i) {
+			this.ctx.globalAlpha = this.hiddenColumns[i] ? this.hiddenAlpha : 1;
 			//draw column rect
 			let columnXMin = i*this.colWidth;
 			this.roundRect(this.ctx,columnXMin + this.colHalfSpace + this.columnStrokeWidth/2, this.toolbarHeight + this.colTopBuffer + this.columnStrokeWidth/2,
@@ -586,6 +608,7 @@ export class GraphComponent implements OnInit {
 			this.ctx.fillText(this.semesterNames[i],columnXMin + this.colHalfSpace + (this.colWidth - this.colHalfSpace*2)/2 - labelWidth/2,
 				this.toolbarHeight + this.colTopBuffer + this.colLabelFontSize);
 		}
+		this.ctx.globalAlpha = 1;
 
 	}
 
@@ -727,12 +750,49 @@ export class GraphComponent implements OnInit {
 		}
 
 		//keep nodes within columns, unless they are being dragged
-	for(var key in this.nodes) { 
+		for(var key in this.nodes) { 
 			let curNode : any = this.nodes[key];
 			if (curNode.state == "drag") {
 				continue;
 			}
 			this.keepNodeInColumn(curNode);
+		}
+
+		//hide column on middle mouse click
+		if (this.mouseClickedRight) {
+			//make sure no nodes absorbed the click event
+			let nodeClicked : boolean = false;
+			for(var key in this.nodes) {
+				let curNode : any = this.nodes[key];
+				if (curNode.state != "idle") {
+					nodeClicked = true;
+				}
+			}
+			if (!nodeClicked) {
+				//check if any columns were clicked
+				let colYMin = this.toolbarHeight + this.colTopBuffer;
+				let colYMax = colYMin + this.colHeight;
+				for (let i : number = 0; i < this.numColumns; ++i) {
+					let colBounds : any = this.calculateColumnBounds(i);
+					if (this.ptInRect(this.mousePos.x,this.mousePos.y,colBounds.min,colBounds.max,colYMin,colYMax,true)) {
+						//a semester column was right clicked; hide it
+						this.toggleColumnVisibility(i);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	toggle visibility of the specified column
+	@param {number} colNum the number of the column to hide or unhide 
+	**/
+	toggleColumnVisibility(colNum) {
+		this.hiddenColumns[colNum] = !this.hiddenColumns[colNum];
+		//relayout all nodes
+		for(var key in this.nodes) {
+			let curNode : any = this.nodes[key];
+			this.layoutFromNode(curNode,curNode.column, true);
 		}
 	}
 
@@ -821,6 +881,24 @@ export class GraphComponent implements OnInit {
 	}
 
 	/**
+	check whether or not a point lies in a rectangle
+	@param {number} px the x coordinate of the point
+	@param {number} py the y coordinate of the point
+	@param {number} minX the left bound of the rect
+	@param {number} maxX the right bound of the rect
+	@param {number} minY the top bound of the rect
+	@param {number} maxY the bottom bound of the rect
+	@param {Boolean} includeTouching whether or not the point should be considered in the rect if they are merely touching
+	@return {Boolean} whether the specified point lies in the specified rect (true) or not (false)
+	**/
+	ptInRect(px,py,minX,maxX,minY,maxY, includeTouching) {
+		if (includeTouching) {
+			return px >= minX && px <= maxX && py >= minY && py <= maxY;
+		}
+		return px > minX && px < maxX && py > minY && py < maxY;
+	}
+
+	/**
 	* get the angle between two points
 	* @param {number} x1 the x coordinate of the first point
 	* @param {number} y1 the y coordinate of the first point
@@ -862,8 +940,7 @@ export class GraphComponent implements OnInit {
 	 * @param {Number} y The top left y coordinate
 	 * @param {Number} width The width of the rectangle
 	 * @param {Number} height The height of the rectangle
-	 * @param {Number} [radius = 5] The corner radius; It can also be an object 
-	 *                 to specify different radii for corners
+	 * @param {Number} [radius = 5] The corner radius; It can also be an object to specify different radii for corners
 	 * @param {Number} [radius.tl = 0] Top left
 	 * @param {Number} [radius.tr = 0] Top right
 	 * @param {Number} [radius.br = 0] Bottom right
